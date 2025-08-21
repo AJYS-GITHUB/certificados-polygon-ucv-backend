@@ -1,0 +1,33 @@
+{
+  "name": "Certificado de Soporte Nutricional y Metabólico",
+  "description": "Certificado emitido por la dependencia de educacion continua",
+  "image": "https://certificados.ucv.edu.pe/img/408cc00e-1272-4421-a537-52d02eda043f.jpg",
+  "pdf": "https://certificados.ucv.edu.pe/certificados/408cc00e-1272-4421-a537-52d02eda043f.pdf",
+  "pdfhash": "sha256:64c993f1bfb347894e244d3674c2c041f5d32220c690f6efd473f13e6357ef25",
+  "json": "https://certificados.ucv.edu.pe/json/408cc00e-1272-4421-a537-52d02eda043f.json",
+  "attributes": [
+    {
+      "trait_type": "document",
+      "value": "0000001"
+    },
+    {
+      "trait_type": "fullname",
+      "value": "Pedro Navaja"
+    },
+    {
+      "trait_type": "program",
+      "value": "Soporte Nutricional y Metabólico"
+    },
+    {
+      "trait_type": "dependency"
+    },
+    {
+      "trait_type": "issued_at",
+      "value": "2025-08-21"
+    },
+    {
+      "trait_type": "pdfhash",
+      "value": "sha256:64c993f1bfb347894e244d3674c2c041f5d32220c690f6efd473f13e6357ef25"
+    }
+  ]
+}

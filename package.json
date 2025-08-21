@@ -1,0 +1,22 @@
+{
+  "name": "certificados-polygon-ucv-backend",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "dotenv": "^17.2.1",
+    "express": "^4.21.2",
+    "http-errors": "~1.6.3",
+    "jade": "^1.9.2",
+    "moongose": "^1.0.0",
+    "morgan": "^1.10.1",
+    "node-signpdf": "^3.0.0",
+    "pdf-lib": "^1.17.1",
+    "qrcode": "^1.5.4",
+    "uuid": "^11.1.0"
+  }
+}

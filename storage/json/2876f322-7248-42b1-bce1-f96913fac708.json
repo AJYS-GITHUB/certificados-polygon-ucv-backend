@@ -1,0 +1,34 @@
+{
+  "name": "Certificado de Soporte Nutricional y Metabólico",
+  "description": "Certificado emitido por la dependencia de educacion continua",
+  "image": "http://localhost:3000/img/2876f322-7248-42b1-bce1-f96913fac708-1.jpg",
+  "pdf": "http://localhost:3000/certs/2876f322-7248-42b1-bce1-f96913fac708.pdf",
+  "pdfhash": "sha256:93495c3acd8af458a11cb2b4eb0f08b923bbe0fcc2ef55561a42efd72fd060cc",
+  "json": "http://localhost:3000/json/2876f322-7248-42b1-bce1-f96913fac708.json",
+  "attributes": [
+    {
+      "trait_type": "document",
+      "value": "0000001"
+    },
+    {
+      "trait_type": "fullname",
+      "value": "Pedro Navaja"
+    },
+    {
+      "trait_type": "program",
+      "value": "Soporte Nutricional y Metabólico"
+    },
+    {
+      "trait_type": "dependency",
+      "value": "Educación Continua"
+    },
+    {
+      "trait_type": "issued_at",
+      "value": "2025-08-21"
+    },
+    {
+      "trait_type": "pdfhash",
+      "value": "sha256:93495c3acd8af458a11cb2b4eb0f08b923bbe0fcc2ef55561a42efd72fd060cc"
+    }
+  ]
+}
