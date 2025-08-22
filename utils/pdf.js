@@ -65,7 +65,16 @@ async function generateCertificadoPdf({ templatePath, paginas, subject, dateStri
         }
     }
 
-    const pdfBytes = await pdfDoc.save();
+    // const pdfBytes = await pdfDoc.save();
+
+    const pdfBytes = await pdfDoc.save({
+        useObjectStreams: false,        // ⭐ CRUCIAL: Sin object streams
+        addDefaultPage: false,
+        objectsPerTick: Infinity,
+        updateFieldAppearances: false,  // ⭐ IMPORTANTE
+        useJSInflate: false            // ⭐ Para mejor compatibilidad
+    });
+
     fs.writeFileSync(savePath, pdfBytes);
     fs.unlinkSync(qrPath);
     return savePath;

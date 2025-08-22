@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
-const { signPdf } = require('../utils/signer');
+const { signPdf, signPdfWithPDFKit } = require('../utils/signer');
 
 // Configuración dinámica de almacenamiento
 const storage = multer.diskStorage({
@@ -70,7 +70,7 @@ router.post('/sign', async (req, res) => {
 
    try {
       // Leer PDF y agregar placeholder
-      const signedPath = await signPdf(pdfPath, certPath);
+      const signedPath = await signPdf(pdfPath, certPath, pdfPath.replace('.pdf', '-signed.pdf'), "12345678");
 
       res.json({ mensaje: 'PDF firmado', path: signedPath });
    } catch (err) {
