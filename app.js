@@ -14,6 +14,7 @@ const usuariosRouter = require('./routes/usuarios');
 const dependenciasRouter = require('./routes/dependencias');
 const loginRouter = require('./routes/auth');
 const fileRouter = require('./routes/files');
+const validacionRouter = require('./routes/validacion');
 
 const auth = require('./middlewares/auth');
 
@@ -37,6 +38,7 @@ connectDB();
 
 app.use('/auth', loginRouter);
 app.use('/', indexRouter);
+app.use('/validacion', validacionRouter);
 
 // app.use('/certificados',auth, certificadosRouter);
 // app.use('/emisiones', auth, emisionesRouter);
