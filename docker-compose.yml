@@ -22,7 +22,7 @@ services:
       - .env
     environment:
       APP_URI: https://certificados.uvcv.edu.pe
-      MONGO_URI: mongodb://mongo:27019/certificados_db
+      MONGO_URI: mongodb://mongo:27017/certificados_db
       NODE_ENV: production
     depends_on:
       - mongo

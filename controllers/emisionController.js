@@ -21,6 +21,14 @@ const generateQR = async (qrPath, qrdata) => {
     }
 }
 
+function hexToRgb(hex) {
+  hex = hex.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
+  return rgb(r, g, b);
+}
+
 exports.getAll = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -50,7 +58,7 @@ exports.getById = async (req, res) => {
 // Crear emisión
 exports.create = async (req, res) => {
     try {
-        const { doc, fullname, certificado_id, description } = req.body;
+        const { doc, fullname, certificado_id, description, datestring } = req.body;
         const certificado = await Certificado.findById(certificado_id).populate('dependencia');
         if (!certificado) return res.status(404).json({ error: 'No encontrado' });
         const uuid = uuidv4();
@@ -65,13 +73,13 @@ exports.create = async (req, res) => {
         for (const pag of certificado.paginas) {
             const page = pdfDoc.getPages()[pag.numero - 1];
             if (pag.contenido == "subject") {
-                const timesRomanFont = await pdfDoc.embedStandardFont('Times-Roman');
+                const embedFont = await pdfDoc.embedStandardFont(pag.font);
                 page.drawText(fullname, {
                     x: pag.x,
                     y: pag.y,
                     size: pag.fontSize,
-                    color: rgb(1, 1, 1),
-                    font: timesRomanFont
+                    color: hexToRgb(pag.color),
+                    font: embedFont
                 });
             } else if (pag.contenido == "qr") {
                 const qrImageBytes = fs.readFileSync(qrPath);
@@ -81,6 +89,16 @@ exports.create = async (req, res) => {
                     y: pag.y,
                     width: pag.width,
                     height: pag.height
+                });
+            } else if (pag.contenido == "date") {
+                const embedFont = await pdfDoc.embedStandardFont(pag.font);
+                // const date = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+                page.drawText(datestring, {
+                    x: pag.x,
+                    y: pag.y,
+                    size: pag.fontSize,
+                    color: hexToRgb(pag.color),
+                    font: embedFont
                 });
             }
         }
