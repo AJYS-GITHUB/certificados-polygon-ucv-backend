@@ -14,6 +14,16 @@ const CertificadoSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  contractAddress: {
+    type: String,
+    required: true,
+    default: ''
+  },
+  contractUrl:{
+    type: String,
+    required: true,
+    default: ''
+  },
   paginas: [
     {
       numero: { type: Number, required: true },
