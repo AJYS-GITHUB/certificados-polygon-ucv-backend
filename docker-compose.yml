@@ -18,8 +18,11 @@ services:
     restart: always
     ports:
       - "3010:3000"
+    env_file:
+      - .env
     environment:
-      MONGO_URI: mongodb://mongo:27017/certificadosdb
+      APP_URI: https://certificados.uvcv.edu.pe
+      MONGO_URI: mongodb://mongo:27019/certificados_db
       NODE_ENV: production
     depends_on:
       - mongo
