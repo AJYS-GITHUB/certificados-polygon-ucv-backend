@@ -6,6 +6,8 @@ const { PDFDocument } = require('pdf-lib');
 const path = require('path');
 const { rgb } = require('pdf-lib');
 const QRCode = require('qrcode');
+const { generateCertificadoPdf } = require('../utils/pdf');
+const { signPdf } = require('../utils/signer');
 
 const generateQR = async (qrPath, qrdata) => {
     try {
@@ -64,63 +66,49 @@ exports.create = async (req, res) => {
         const uuid = uuidv4();
 
         const templatePath = path.join(__dirname, '..', 'storage', 'templates', certificado.filename);
-        const existingPdfBytes = fs.readFileSync(templatePath);
-        const pdfDoc = await PDFDocument.load(existingPdfBytes);
-        const qrPath = path.join(__dirname, '..', 'storage', 'certificates', `${uuid}.png`);
-        const qrdata = `${process.env.APP_URI}/verificar/${uuid}`;
-        await generateQR(qrPath, qrdata);
-
-        for (const pag of certificado.paginas) {
-            const page = pdfDoc.getPages()[pag.numero - 1];
-            if (pag.contenido == "subject") {
-                const embedFont = await pdfDoc.embedStandardFont(pag.font);
-                page.drawText(fullname, {
-                    x: pag.x,
-                    y: pag.y,
-                    size: pag.fontSize,
-                    color: hexToRgb(pag.color),
-                    font: embedFont
-                });
-            } else if (pag.contenido == "qr") {
-                const qrImageBytes = fs.readFileSync(qrPath);
-                const qrImage = await pdfDoc.embedPng(qrImageBytes);
-                page.drawImage(qrImage, {
-                    x: pag.x,
-                    y: pag.y,
-                    width: pag.width,
-                    height: pag.height
-                });
-            } else if (pag.contenido == "date") {
-                const embedFont = await pdfDoc.embedStandardFont(pag.font);
-                // const date = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
-                page.drawText(datestring, {
-                    x: pag.x,
-                    y: pag.y,
-                    size: pag.fontSize,
-                    color: hexToRgb(pag.color),
-                    font: embedFont
-                });
-            }
-        }
-
-        const pdfBytes = await pdfDoc.save();
+        const certPath = path.join(__dirname, '..', 'storage', 'signs', certificado.dependencia.certificadodigital);
         const savePath = path.join(__dirname, '..', 'storage', 'certificates', `${uuid}.pdf`);
-        fs.writeFileSync(savePath, pdfBytes);
-        fs.unlinkSync(qrPath);
+
+        const nueva = new Emision({
+            certificado: certificado._id,
+            uuid,
+            subject: {
+                documento: doc,
+                nombreCompleto: fullname
+            },
+            fechaEmision: new Date(),
+            pdfHash: "-",
+            pdfPath: "-",
+            jsonPath: "-",
+            imagePath: "-",
+            transactionId: null,
+            status: 'pendiente'
+
+        });
+        await nueva.save();
+
+        const resultSavePath = await generateCertificadoPdf({
+            templatePath,
+            paginas: certificado.paginas,
+            subject: fullname,
+            dateString: datestring,
+            qrdata:`${process.env.APP_URI}/landing/${nueva._id}`,
+            savePath
+        });
 
         // Generar imagen JPEG de la primera página usando pdftoppm
         const imgDir = path.join(__dirname, '..', 'storage', 'img');
         if (!fs.existsSync(imgDir)) fs.mkdirSync(imgDir);
         const imgBase = path.join(imgDir, uuid);
         const { execSync } = require('child_process');
-        execSync(`pdftoppm -jpeg -f 1 -l 1 "${savePath}" "${imgBase}"`);
+        execSync(`pdftoppm -jpeg -f 1 -l 1 "${resultSavePath}" "${imgBase}"`);
         const imagePath = `${imgBase}-1.jpg`;
 
-
+        const resultSignedPath = await signPdf(resultSavePath, certPath, resultSavePath.replace('.pdf', '-signed.pdf'), "12345678");
 
         // Calcular hash del PDF
         const crypto = require('crypto');
-        const pdfBuffer = fs.readFileSync(savePath);
+        const pdfBuffer = fs.readFileSync(resultSignedPath);
         const pdfHash = 'sha256:' + crypto.createHash('sha256').update(pdfBuffer).digest('hex');
 
         // Generar JSON de metadata
@@ -144,25 +132,15 @@ exports.create = async (req, res) => {
             ]
         };
         fs.writeFileSync(jsonPath, JSON.stringify(metadata, null, 2));
+        fs.unlinkSync(resultSavePath);
 
-        // Guardar la emisión
-        const nueva = new Emision({
-            certificado: certificado._id,
-            uuid,
-            subject: {
-                documento: doc,
-                nombreCompleto: fullname
-            },
-            fechaEmision: new Date(),
-            pdfHash,
-            pdfPath: `${process.env.APP_URI}/certs/${uuid}.pdf`,
-            jsonPath: `${process.env.APP_URI}/json/${uuid}.json`,
-            imagePath: `${process.env.APP_URI}/img/${uuid}-1.jpg`,
-            transactionId: null,
-            status: 'pendiente'
+        nueva.pdfPath = `${process.env.APP_URI}/certs/${uuid}-signed.pdf`;
+        nueva.jsonPath= `${process.env.APP_URI}/json/${uuid}.json`;
+        nueva.imagePath= `${process.env.APP_URI}/img/${uuid}-1.jpg`;
+        nueva.pdfHash= pdfHash;
 
-        });
         await nueva.save();
+
         res.status(201).json(nueva);
     } catch (err) {
         res.status(400).json({ error: err.message });

@@ -27,7 +27,6 @@ async function generateCertificadoPdf({ templatePath, paginas, subject, dateStri
     const existingPdfBytes = fs.readFileSync(templatePath);
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
-    // Generar QR temporal
     console.log("savepath: ", savePath);
     const qrPath = savePath.replace('.pdf', '.png');
     console.log("qrPath: ", qrPath);
@@ -56,6 +55,16 @@ async function generateCertificadoPdf({ templatePath, paginas, subject, dateStri
         } else if (pag.contenido === "date") {
             const embedFont = await pdfDoc.embedStandardFont(pag.font);
             page.drawText(dateString, {
+                x: pag.x,
+                y: pag.y,
+                size: pag.fontSize,
+                color: hexToRgb(pag.color),
+                font: embedFont
+            });
+        }else if(pag.contenido === "signdate"){
+            const embedFont = await pdfDoc.embedStandardFont(pag.font);
+            const signDate = new Date().toISOString().split('T')[0];
+            page.drawText(signDate, {
                 x: pag.x,
                 y: pag.y,
                 size: pag.fontSize,
