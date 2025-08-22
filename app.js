@@ -12,6 +12,11 @@ const certificadosRouter = require('./routes/certificados');
 const emisionesRouter = require('./routes/emisiones');
 const usuariosRouter = require('./routes/usuarios');
 const dependenciasRouter = require('./routes/dependencias');
+const loginRouter = require('./routes/auth');
+const fileRouter = require('./routes/files');
+
+const auth = require('./middlewares/auth');
+
 
 var app = express();
 
@@ -30,11 +35,20 @@ app.use('/json', express.static(path.join(__dirname, 'storage', 'json')));
 
 connectDB();
 
+app.use('/auth', loginRouter);
 app.use('/', indexRouter);
+
+// app.use('/certificados',auth, certificadosRouter);
+// app.use('/emisiones', auth, emisionesRouter);
+// app.use('/usuarios', auth, usuariosRouter);
+// app.use('/dependencias', auth, dependenciasRouter);
+// app.use('/files', auth, fileRouter);
+
 app.use('/certificados', certificadosRouter);
 app.use('/emisiones', emisionesRouter);
 app.use('/usuarios', usuariosRouter);
 app.use('/dependencias', dependenciasRouter);
+app.use('/files', fileRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

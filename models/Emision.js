@@ -30,6 +30,19 @@ const EmisionSchema = new mongoose.Schema({
   imagePath: {
     type: String,
     required: true
+  },
+  emailSended: {
+    type: Boolean,
+    default: false
+  },
+  transactionId: {
+    type: String,
+    default: null
+  },
+  status: {
+    type: String,
+    enum: ['pendiente', 'completado', 'error', 'revocado'],
+    default: 'pendiente'
   }
 });
 

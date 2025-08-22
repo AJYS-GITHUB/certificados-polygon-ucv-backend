@@ -7,5 +7,6 @@ router.get('/:id', emisionController.getById);
 router.post('/', emisionController.create);
 router.put('/:id', emisionController.update);
 router.delete('/:id', emisionController.delete);
+router.put('/completar/:id', emisionController.completarEmision);
 
 module.exports = router;

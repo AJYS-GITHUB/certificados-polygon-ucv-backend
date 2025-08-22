@@ -22,11 +22,11 @@ const generateQR = async (qrPath, qrdata) => {
 }
 
 function hexToRgb(hex) {
-  hex = hex.replace('#', '');
-  const r = parseInt(hex.substring(0, 2), 16) / 255;
-  const g = parseInt(hex.substring(2, 4), 16) / 255;
-  const b = parseInt(hex.substring(4, 6), 16) / 255;
-  return rgb(r, g, b);
+    hex = hex.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16) / 255;
+    const g = parseInt(hex.substring(2, 4), 16) / 255;
+    const b = parseInt(hex.substring(4, 6), 16) / 255;
+    return rgb(r, g, b);
 }
 
 exports.getAll = async (req, res) => {
@@ -156,8 +156,11 @@ exports.create = async (req, res) => {
             fechaEmision: new Date(),
             pdfHash,
             pdfPath: `${process.env.APP_URI}/certs/${uuid}.pdf`,
-            jsonPath:`${process.env.APP_URI}/json/${uuid}.json`,
-            imagePath:`${process.env.APP_URI}/img/${uuid}-1.jpg`
+            jsonPath: `${process.env.APP_URI}/json/${uuid}.json`,
+            imagePath: `${process.env.APP_URI}/img/${uuid}-1.jpg`,
+            transactionId: null,
+            status: 'pendiente'
+
         });
         await nueva.save();
         res.status(201).json(nueva);
@@ -183,6 +186,29 @@ exports.delete = async (req, res) => {
         const eliminada = await Emision.findByIdAndDelete(req.params.id);
         if (!eliminada) return res.status(404).json({ error: 'No encontrada' });
         res.json({ mensaje: 'Emisión eliminada' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+exports.completarEmision = async (req, res) => {
+    const { id } = req.params;
+    const { transactionId } = req.body;
+
+    try {
+        const emision = await Emision.findById(req.params.id);
+        if (!emision) return res.status(404).json({ error: 'Emisión no encontrada' });
+
+        if (!transactionId || transactionId.trim() === '') {
+            emision.status = 'error';
+            emision.transactionId = '';
+        } else {
+            emision.status = 'completado';
+            emision.transactionId = transactionId;
+        }
+
+        await emision.save();
+        res.json(emision);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
