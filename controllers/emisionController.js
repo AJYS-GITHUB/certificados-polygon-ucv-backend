@@ -119,7 +119,7 @@ exports.create = async (req, res) => {
             name: `Certificado de ${certificado.titulo}`,
             description: description,
             image: `${process.env.APP_URI}/img/${uuid}-1.jpg`,
-            pdf: `${process.env.APP_URI}/certs/${uuid}.pdf`,
+            pdf: `${process.env.APP_URI}/certs/${uuid}-signed.pdf`,
             pdfhash: pdfHash,
             json: `${process.env.APP_URI}/json/${uuid}.json`,
             attributes: [
