@@ -231,7 +231,7 @@ exports.verificarEmision = async (req, res) => {
                     console.log(`Verificando DNI: ${dni}`);
 
                     // Buscar la última emisión por dni
-                    const emision = await Emision.findOne({ "subject.documento": dni });
+                    const emision = await Emision.findOne({ "subject.documento": dni }).sort({ fechaEmision: -1 });
 
                     console.log(`Emisión encontrada: ${emision ? emision._id : 'No encontrada'}`);
                     if (!emision || !emision.pdfPath) {
