@@ -9,6 +9,10 @@ const QRCode = require('qrcode');
 const { generateCertificadoPdf } = require('../utils/pdf');
 const { signPdf } = require('../utils/signer');
 
+const csv = require('csv-parser');
+const pdfParse = require('pdf-parse');
+const nodemailer = require('nodemailer');
+
 const generateQR = async (qrPath, qrdata) => {
     try {
         await QRCode.toFile(qrPath, qrdata, {
@@ -92,7 +96,7 @@ exports.create = async (req, res) => {
             paginas: certificado.paginas,
             subject: fullname,
             dateString: datestring,
-            qrdata:`${process.env.APP_URI}/landing/${nueva._id}`,
+            qrdata: `${process.env.APP_URI}/landing/${nueva._id}`,
             savePath
         });
 
@@ -135,9 +139,9 @@ exports.create = async (req, res) => {
         fs.unlinkSync(resultSavePath);
 
         nueva.pdfPath = `${process.env.APP_URI}/certs/${uuid}-signed.pdf`;
-        nueva.jsonPath= `${process.env.APP_URI}/json/${uuid}.json`;
-        nueva.imagePath= `${process.env.APP_URI}/img/${uuid}-1.jpg`;
-        nueva.pdfHash= pdfHash;
+        nueva.jsonPath = `${process.env.APP_URI}/json/${uuid}.json`;
+        nueva.imagePath = `${process.env.APP_URI}/img/${uuid}-1.jpg`;
+        nueva.pdfHash = pdfHash;
 
         await nueva.save();
 
@@ -187,6 +191,101 @@ exports.completarEmision = async (req, res) => {
 
         await emision.save();
         res.json(emision);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+exports.verificarEmision = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No se envió el archivo CSV.' });
+        }
+
+        const results = [];
+        const stream = require('stream');
+        const bufferStream = new stream.PassThrough();
+        bufferStream.end(req.file.buffer);
+
+        bufferStream
+            .pipe(csv({ separator: ';' }))
+            .on('data', (data) => results.push(data))
+            .on('end', async () => {
+                let verificados = [];
+
+                // Configura el transporter de correo si quieres enviar emails
+                // const transporter = nodemailer.createTransport({
+                //     host: process.env.SMTP_HOST,
+                //     port: process.env.SMTP_PORT,
+                //     secure: false,
+                //     auth: {
+                //         user: process.env.SMTP_USER,
+                //         pass: process.env.SMTP_PASS
+                //     }
+                // });
+
+                for (const row of results) {
+                    const dni = row.dni;
+                    if (!dni) continue;
+
+                    console.log(`Verificando DNI: ${dni}`);
+
+                    // Buscar la última emisión por dni
+                    const emision = await Emision.findOne({ "subject.documento": dni });
+
+                    console.log(`Emisión encontrada: ${emision ? emision._id : 'No encontrada'}`);
+                    if (!emision || !emision.pdfPath) {
+                        verificados.push({ dni, status: 'no encontrado' });
+                        continue;
+                    }
+
+                    // Obtener solo el nombre del archivo PDF
+                    let pdfFileName = emision.pdfPath.split('/').pop();
+                    let pdfLocalPath = path.join(__dirname, '..', 'storage', 'certificates', pdfFileName);
+
+                    // Leer PDF local
+                    let pdfBuffer;
+                    try {
+                        pdfBuffer = fs.readFileSync(pdfLocalPath);
+                    } catch (e) {
+                        verificados.push({ dni, status: 'pdf no encontrado localmente' });
+                        continue;
+                    }
+
+                    // Verificar campos en el PDF
+                    // const pdfParse = require('pdf-parse');
+                    const pdfData = await pdfParse(pdfBuffer);
+                    const pdfText = pdfData.text;
+                    let campos = Object.keys(row).filter(k => k !== 'dni' && k !== 'correo' && k != 'largo' && k != 'curso/programa');
+                    let faltantes = campos.filter(campo => !pdfText.includes(row[campo]));
+
+                    let status = faltantes.length === 0 ? 'ok' : 'faltan campos';
+                    verificados.push({ dni, status, faltantes });
+
+                    // Enviar correo si todo está ok y hay email
+                    // if (status === 'ok' && row.email) {
+                    //     try {
+                    //         await transporter.sendMail({
+                    //             from: process.env.SMTP_FROM,
+                    //             to: row.email,
+                    //             subject: 'Certificado UCV',
+                    //             text: `Adjuntamos su certificado.`,
+                    //             attachments: [
+                    //                 {
+                    //                     filename: 'certificado.pdf',
+                    //                     content: pdfBuffer
+                    //                 }
+                    //             ]
+                    //         });
+                    //     } catch (err) {
+                    //         verificados[verificados.length - 1].emailStatus = 'error';
+                    //         verificados[verificados.length - 1].emailError = err.message;
+                    //     }
+                    // }
+                }
+
+                res.json({ verificados });
+            });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
