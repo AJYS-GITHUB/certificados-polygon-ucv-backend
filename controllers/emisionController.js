@@ -12,6 +12,7 @@ const { signPdf } = require('../utils/signer');
 const csv = require('csv-parser');
 const pdfParse = require('pdf-parse');
 const nodemailer = require('nodemailer');
+const { Parser } = require('json2csv');
 
 const generateQR = async (qrPath, qrdata) => {
     try {
@@ -211,35 +212,18 @@ exports.verificarEmision = async (req, res) => {
             .pipe(csv({ separator: ';' }))
             .on('data', (data) => results.push(data))
             .on('end', async () => {
-                let verificados = [];
-
-                // Configura el transporter de correo si quieres enviar emails
-                // const transporter = nodemailer.createTransport({
-                //     host: process.env.SMTP_HOST,
-                //     port: process.env.SMTP_PORT,
-                //     secure: false,
-                //     auth: {
-                //         user: process.env.SMTP_USER,
-                //         pass: process.env.SMTP_PASS
-                //     }
-                // });
+                let csvRows = [];
 
                 for (const row of results) {
                     const dni = row.dni;
                     if (!dni) continue;
 
-                    console.log(`Verificando DNI: ${dni}`);
-
                     // Buscar la última emisión por dni
                     const emision = await Emision.findOne({ "subject.documento": dni }).sort({ fechaEmision: -1 });
 
-                    console.log(`Emisión encontrada: ${emision ? emision._id : 'No encontrada'}`);
-                    if (!emision || !emision.pdfPath) {
-                        verificados.push({ dni, status: 'no encontrado' });
-                        continue;
-                    }
+                    if (!emision || !emision.pdfPath) continue;
 
-                    // Obtener solo el nombre del archivo PDF
+                    // Solo el nombre del archivo PDF
                     let pdfFileName = emision.pdfPath.split('/').pop();
                     let pdfLocalPath = path.join(__dirname, '..', 'storage', 'certificates', pdfFileName);
 
@@ -248,43 +232,34 @@ exports.verificarEmision = async (req, res) => {
                     try {
                         pdfBuffer = fs.readFileSync(pdfLocalPath);
                     } catch (e) {
-                        verificados.push({ dni, status: 'pdf no encontrado localmente' });
                         continue;
                     }
 
                     // Verificar campos en el PDF
-                    // const pdfParse = require('pdf-parse');
                     const pdfData = await pdfParse(pdfBuffer);
                     const pdfText = pdfData.text;
                     let campos = Object.keys(row).filter(k => k !== 'dni' && k !== 'correo' && k != 'largo' && k != 'curso/programa');
                     let faltantes = campos.filter(campo => !pdfText.includes(row[campo]));
 
-                    let status = faltantes.length === 0 ? 'ok' : 'faltan campos';
-                    verificados.push({ dni, status, faltantes });
-
-                    // Enviar correo si todo está ok y hay email
-                    // if (status === 'ok' && row.email) {
-                    //     try {
-                    //         await transporter.sendMail({
-                    //             from: process.env.SMTP_FROM,
-                    //             to: row.email,
-                    //             subject: 'Certificado UCV',
-                    //             text: `Adjuntamos su certificado.`,
-                    //             attachments: [
-                    //                 {
-                    //                     filename: 'certificado.pdf',
-                    //                     content: pdfBuffer
-                    //                 }
-                    //             ]
-                    //         });
-                    //     } catch (err) {
-                    //         verificados[verificados.length - 1].emailStatus = 'error';
-                    //         verificados[verificados.length - 1].emailError = err.message;
-                    //     }
-                    // }
+                    if (faltantes.length === 0) {
+                        csvRows.push({
+                            id: emision._id,
+                            doc: emision.subject.documento,
+                            fullname: emision.subject.nombreCompleto,
+                            pdf: pdfFileName,
+                            email: row.correo || row.email || ''
+                        });
+                    }
                 }
 
-                res.json({ verificados });
+                // Generar CSV
+                const fields = ['id', 'doc', 'fullname', 'pdf', 'email'];
+                const parser = new Parser({ fields, delimiter: ';' });
+                const csvString = parser.parse(csvRows);
+
+                res.header('Content-Type', 'text/csv');
+                res.attachment('verificados.csv');
+                res.send(csvString);
             });
     } catch (err) {
         res.status(500).json({ error: err.message });
