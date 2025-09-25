@@ -71,8 +71,9 @@ router.post('/sign', async (req, res) => {
    try {
       // Leer PDF y agregar placeholder
       const signedPath = await signPdf(pdfPath, certPath, pdfPath.replace('.pdf', '-signed.pdf'), "12345678");
+      const signedPath2 = await signPdf(signedPath, certPath, pdfPath.replace('.pdf', '-signed2.pdf'), "12345678");
 
-      res.json({ mensaje: 'PDF firmado', path: signedPath });
+      res.json({ mensaje: 'PDF firmado', path: signedPath2 });
    } catch (err) {
       res.status(500).json({ error: 'Error al firmar el PDF', detalle: err.message });
    }

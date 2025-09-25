@@ -5,7 +5,17 @@ const { plainAddPlaceholder } = require('node-signpdf/dist/helpers');
 const { pdfkitAddPlaceholder } = require('node-signpdf/dist/helpers');
 const PDFKit = require('pdfkit');
 
-const signPdf = async (pdfPath, certPath, outputPath, certPassword = null) => {
+const signPdfWithMultipleSignatures = async (pdfPath, outputPath, signatures) => {
+   if (signatures.length === 0) {
+      throw new Error('No hay firmas proporcionadas');
+   }
+   let currentPdfPath = pdfPath;
+   signatures.forEach(({ certPath, reason, name, password = '' }) => {
+
+   });
+}
+
+const signPdf = async (pdfPath, certPath, outputPath, certPassword = null, signatureData = null) => {
    try {
 
       const existingPdfBytes = fs.readFileSync(pdfPath);
