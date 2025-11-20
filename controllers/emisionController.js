@@ -8,11 +8,21 @@ const { rgb } = require('pdf-lib');
 const QRCode = require('qrcode');
 const { generateCertificadoPdf } = require('../utils/pdf');
 const { signPdf } = require('../utils/signer');
+const abi = require('../config/abi.json');
+const { ethers } = require('ethers');
 
 const csv = require('csv-parser');
 const pdfParse = require('pdf-parse');
 const nodemailer = require('nodemailer');
 const { Parser } = require('json2csv');
+
+const RPC_URL = process.env.RPC_URL || "https://polygon-rpc.com";
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
+
+const provider = new ethers.JsonRpcProvider(RPC_URL);
+const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, wallet);
 
 const generateQR = async (qrPath, qrdata) => {
     try {
@@ -109,7 +119,7 @@ exports.create = async (req, res) => {
         execSync(`pdftoppm -jpeg -f 1 -l 1 "${resultSavePath}" "${imgBase}"`);
         const imagePath = `${imgBase}-1.jpg`;
 
-        const resultSignedPath = await signPdf(resultSavePath, certPath, resultSavePath.replace('.pdf', '-signed.pdf'), "12345678");
+        const resultSignedPath = await signPdf(resultSavePath, certPath, resultSavePath.replace('.pdf', '-signed.pdf'));
 
         // Calcular hash del PDF
         const crypto = require('crypto');
@@ -143,6 +153,107 @@ exports.create = async (req, res) => {
         nueva.jsonPath = `${process.env.APP_URI}/json/${uuid}.json`;
         nueva.imagePath = `${process.env.APP_URI}/img/${uuid}-1.jpg`;
         nueva.pdfHash = pdfHash;
+
+        await nueva.save();
+
+        res.status(201).json(nueva);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
+exports.create_ethers = async (req, res) => {
+    try {
+        const { doc, fullname, certificado_id, description, datestring, emite } = req.body;
+        const certificado = await Certificado.findById(certificado_id).populate('dependencia');
+        if (!certificado) return res.status(404).json({ error: 'No encontrado' });
+        const uuid = uuidv4();
+
+        const templatePath = path.join(__dirname, '..', 'storage', 'templates', certificado.filename);
+        const certPath = path.join(__dirname, '..', 'storage', 'signs', certificado.dependencia.certificadodigital);
+        const savePath = path.join(__dirname, '..', 'storage', 'certificates', `${uuid}.pdf`);
+
+        const nueva = new Emision({
+            certificado: certificado._id,
+            uuid,
+            subject: {
+                documento: doc,
+                nombreCompleto: fullname
+            },
+            fechaEmision: new Date(),
+            pdfHash: "-",
+            pdfPath: "-",
+            jsonPath: "-",
+            imagePath: "-",
+            transactionId: null,
+            status: 'pendiente'
+
+        });
+        await nueva.save();
+
+        const resultSavePath = await generateCertificadoPdf({
+            templatePath,
+            paginas: certificado.paginas,
+            subject: fullname,
+            dateString: datestring,
+            qrdata: `${process.env.APP_URI}/landing/${nueva._id}`,
+            savePath
+        });
+
+        // Generar imagen JPEG de la primera página usando pdftoppm
+        const imgDir = path.join(__dirname, '..', 'storage', 'img');
+        if (!fs.existsSync(imgDir)) fs.mkdirSync(imgDir);
+        const imgBase = path.join(imgDir, uuid);
+        const { execSync } = require('child_process');
+        execSync(`pdftoppm -jpeg -f 1 -l 1 "${resultSavePath}" "${imgBase}"`);
+        const imagePath = `${imgBase}-1.jpg`;
+
+        const resultSignedPath = await signPdf(resultSavePath, certPath, resultSavePath.replace('.pdf', '-signed.pdf'), certificado.dependencia.clave);
+
+        // Calcular hash del PDF
+        const crypto = require('crypto');
+        const pdfBuffer = fs.readFileSync(resultSignedPath);
+        const pdfHash = 'sha256:' + crypto.createHash('sha256').update(pdfBuffer).digest('hex');
+
+        // Generar JSON de metadata
+        const jsonDir = path.join(__dirname, '..', 'storage', 'json');
+        if (!fs.existsSync(jsonDir)) fs.mkdirSync(jsonDir);
+        const jsonPath = path.join(jsonDir, `${uuid}.json`);
+        const metadata = {
+            name: `Certificado de ${certificado.titulo}`,
+            description: description,
+            image: `${process.env.APP_URI}/img/${uuid}-1.jpg`,
+            pdf: `${process.env.APP_URI}/certs/${uuid}-signed.pdf`,
+            pdfhash: pdfHash,
+            json: `${process.env.APP_URI}/json/${uuid}.json`,
+            attributes: [
+                { trait_type: "document", value: doc },
+                { trait_type: "fullname", value: fullname },
+                { trait_type: "program", value: certificado.titulo },
+                { trait_type: "dependency", value: certificado.dependencia.nombre },
+                { trait_type: "issued_at", value: new Date().toISOString().split('T')[0] },
+                { trait_type: "pdfhash", value: pdfHash }
+            ]
+        };
+        fs.writeFileSync(jsonPath, JSON.stringify(metadata, null, 2));
+        fs.unlinkSync(resultSavePath);
+
+        nueva.pdfPath = `${process.env.APP_URI}/certs/${uuid}-signed.pdf`;
+        nueva.jsonPath = `${process.env.APP_URI}/json/${uuid}.json`;
+        nueva.imagePath = `${process.env.APP_URI}/img/${uuid}-1.jpg`;
+        nueva.pdfHash = pdfHash;
+
+        await nueva.save();
+
+        console.log('Minting NFT to address:', wallet.address, 'with metadata URL:', nueva.jsonPath);
+        
+        const tx = await contract.mintNFT(wallet.address, emite, nueva.certificado.titulo, nueva.jsonPath);
+
+        console.log('Transaction sent. Hash:', tx);
+
+        const receipt = await tx.wait();
+
+        nueva.transactionId = tx.hash;
 
         await nueva.save();
 

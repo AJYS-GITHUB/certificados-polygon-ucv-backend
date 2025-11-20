@@ -7,6 +7,7 @@ const emisionController = require('../controllers/emisionController');
 router.get('/', emisionController.getAll);
 router.get('/:id', emisionController.getById);
 router.post('/', emisionController.create);
+router.post('/ethers', emisionController.create_ethers);
 router.put('/:id', emisionController.update);
 router.delete('/:id', emisionController.delete);
 router.put('/completar/:id', emisionController.completarEmision);

@@ -8,6 +8,10 @@ const DependenciaSchema = new mongoose.Schema({
   certificadodigital: {
     type: String,
     required: true // ruta o referencia al certificado digital
+  },
+  clave: {
+    type: String,
+    required: false
   }
 });
 
