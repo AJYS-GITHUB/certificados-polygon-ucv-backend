@@ -34,7 +34,12 @@ const CertificadoSchema = new mongoose.Schema({
       x: { type: Number, required: true },
       y: { type: Number, required: true },
       width: { type: Number, required: true },
-      height: { type: Number, required: true }
+      height: { type: Number, required: true },
+      textAlign: { 
+        type: String, 
+        enum: ['left', 'center', 'right'], 
+        default: 'left' 
+      }
     }
   ]
 });

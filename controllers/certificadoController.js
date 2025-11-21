@@ -77,7 +77,7 @@ exports.delete = async (req, res) => {
 };
 
 exports.generatePdf = async (req, res) => {
-   const { doc, fullname, certificado_id, datestring } = req.body;
+   const { certificado_id, ...dynamicFields } = req.body;
 
    const certificado = await Certificado.findById(certificado_id).populate('dependencia');
    if (!certificado) return res.status(404).json({ error: 'No encontrado' });
@@ -86,13 +86,38 @@ exports.generatePdf = async (req, res) => {
    const uuid = uuidv4();
    const qrdata = `${process.env.APP_URI}/verificar/${uuid}`;
    const savePath = path.join(__dirname, '..', 'storage', 'certificates', `${uuid}.pdf`);
+   
    try {
-      const resultSavePath = await generateCertificadoPdf({ templatePath, paginas: certificado.paginas, subject: fullname, dateString: datestring, qrdata, savePath });
+      // Preparar datos dinámicos para el PDF
+      const data = {
+         // Campos tradicionales (para compatibilidad)
+         subject: dynamicFields.fullname || dynamicFields.subject,
+         dateString: dynamicFields.datestring || dynamicFields.date,
+         
+         // Todos los campos dinámicos enviados en el request
+         ...dynamicFields
+      };
+      
+      console.log('Datos dinámicos recibidos:', data);
+      
+      const resultSavePath = await generateCertificadoPdf({ 
+         templatePath, 
+         paginas: certificado.paginas, 
+         data, 
+         qrdata, 
+         savePath 
+      });
 
-      res.json({ pdfFilename: `${uuid}.pdf` });
+      res.json({ 
+         pdfFilename: `${uuid}.pdf`,
+         message: 'PDF generado exitosamente con campos dinámicos'
+      });
    } catch (error) {
       console.error('Error generating PDF:', error);
-      res.status(500).send('Error generating PDF');
+      res.status(500).json({ 
+         error: 'Error generating PDF', 
+         details: error.message 
+      });
    }
 };
 

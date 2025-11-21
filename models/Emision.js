@@ -9,7 +9,8 @@ const EmisionSchema = new mongoose.Schema({
   uuid: { type: String, required: true },
   subject: {
     documento: { type: String, required: true },
-    nombreCompleto: { type: String, required: true }
+    nombreCompleto: { type: String, required: true },
+    correo: { type: String, required: true }
   },
   fechaEmision: {
     type: Date,
@@ -41,8 +42,12 @@ const EmisionSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pendiente', 'completado', 'error', 'revocado'],
+    enum: ['pendiente', 'procesando', 'completado', 'error', 'revocado', 'reintentando'],
     default: 'pendiente'
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
   }
 });
 

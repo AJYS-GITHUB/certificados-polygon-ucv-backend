@@ -10,19 +10,12 @@ const { generateCertificadoPdf } = require('../utils/pdf');
 const { signPdf } = require('../utils/signer');
 const abi = require('../config/abi.json');
 const { ethers } = require('ethers');
+const { getBlockchainQueue } = require('../utils/blockchainQueue');
 
 const csv = require('csv-parser');
 const pdfParse = require('pdf-parse');
 const nodemailer = require('nodemailer');
 const { Parser } = require('json2csv');
-
-const RPC_URL = process.env.RPC_URL || "https://polygon-rpc.com";
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
-const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
-
-const provider = new ethers.JsonRpcProvider(RPC_URL);
-const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
-const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, wallet);
 
 const generateQR = async (qrPath, qrdata) => {
     try {
@@ -52,7 +45,7 @@ exports.getAll = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
         const [items, total] = await Promise.all([
-            Emision.find().skip(skip).limit(limit).populate('certificado'),
+            Emision.find().skip(skip).limit(limit).populate('certificado').sort({ fechaEmision: -1 }),
             Emision.countDocuments()
         ]);
         res.json({ items, total, page, pages: Math.ceil(total / limit) });
@@ -75,7 +68,23 @@ exports.getById = async (req, res) => {
 // Crear emisión
 exports.create = async (req, res) => {
     try {
-        const { doc, fullname, certificado_id, description, datestring } = req.body;
+        const { doc, fullname, certificado_id, description, datestring, correo, ...dynamicFields } = req.body;
+        
+        // Validaciones
+        if (!doc || !fullname || !certificado_id || !correo) {
+            return res.status(400).json({ 
+                error: 'Campos requeridos: doc, fullname, certificado_id, correo' 
+            });
+        }
+        
+        // Validar formato de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(correo)) {
+            return res.status(400).json({ 
+                error: 'El formato del correo electrónico no es válido' 
+            });
+        }
+        
         const certificado = await Certificado.findById(certificado_id).populate('dependencia');
         if (!certificado) return res.status(404).json({ error: 'No encontrado' });
         const uuid = uuidv4();
@@ -89,7 +98,8 @@ exports.create = async (req, res) => {
             uuid,
             subject: {
                 documento: doc,
-                nombreCompleto: fullname
+                nombreCompleto: fullname,
+                correo: correo
             },
             fechaEmision: new Date(),
             pdfHash: "-",
@@ -102,100 +112,25 @@ exports.create = async (req, res) => {
         });
         await nueva.save();
 
-        const resultSavePath = await generateCertificadoPdf({
-            templatePath,
-            paginas: certificado.paginas,
+        // Preparar datos dinámicos para el PDF
+        const data = {
             subject: fullname,
             dateString: datestring,
-            qrdata: `${process.env.APP_URI}/landing/${nueva._id}`,
-            savePath
-        });
-
-        // Generar imagen JPEG de la primera página usando pdftoppm
-        const imgDir = path.join(__dirname, '..', 'storage', 'img');
-        if (!fs.existsSync(imgDir)) fs.mkdirSync(imgDir);
-        const imgBase = path.join(imgDir, uuid);
-        const { execSync } = require('child_process');
-        execSync(`pdftoppm -jpeg -f 1 -l 1 "${resultSavePath}" "${imgBase}"`);
-        const imagePath = `${imgBase}-1.jpg`;
-
-        const resultSignedPath = await signPdf(resultSavePath, certPath, resultSavePath.replace('.pdf', '-signed.pdf'));
-
-        // Calcular hash del PDF
-        const crypto = require('crypto');
-        const pdfBuffer = fs.readFileSync(resultSignedPath);
-        const pdfHash = 'sha256:' + crypto.createHash('sha256').update(pdfBuffer).digest('hex');
-
-        // Generar JSON de metadata
-        const jsonDir = path.join(__dirname, '..', 'storage', 'json');
-        if (!fs.existsSync(jsonDir)) fs.mkdirSync(jsonDir);
-        const jsonPath = path.join(jsonDir, `${uuid}.json`);
-        const metadata = {
-            name: `Certificado de ${certificado.titulo}`,
-            description: description,
-            image: `${process.env.APP_URI}/img/${uuid}-1.jpg`,
-            pdf: `${process.env.APP_URI}/certs/${uuid}-signed.pdf`,
-            pdfhash: pdfHash,
-            json: `${process.env.APP_URI}/json/${uuid}.json`,
-            attributes: [
-                { trait_type: "document", value: doc },
-                { trait_type: "fullname", value: fullname },
-                { trait_type: "program", value: certificado.titulo },
-                { trait_type: "dependency", value: certificado.dependencia.nombre },
-                { trait_type: "issued_at", value: new Date().toISOString().split('T')[0] },
-                { trait_type: "pdfhash", value: pdfHash }
-            ]
+            date: datestring,
+            fullname: fullname,
+            doc: doc,
+            documento: doc,
+            correo: correo,
+            email: correo,
+            ...dynamicFields // Agregar todos los campos adicionales
         };
-        fs.writeFileSync(jsonPath, JSON.stringify(metadata, null, 2));
-        fs.unlinkSync(resultSavePath);
-
-        nueva.pdfPath = `${process.env.APP_URI}/certs/${uuid}-signed.pdf`;
-        nueva.jsonPath = `${process.env.APP_URI}/json/${uuid}.json`;
-        nueva.imagePath = `${process.env.APP_URI}/img/${uuid}-1.jpg`;
-        nueva.pdfHash = pdfHash;
-
-        await nueva.save();
-
-        res.status(201).json(nueva);
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-};
-
-exports.create_ethers = async (req, res) => {
-    try {
-        const { doc, fullname, certificado_id, description, datestring, emite } = req.body;
-        const certificado = await Certificado.findById(certificado_id).populate('dependencia');
-        if (!certificado) return res.status(404).json({ error: 'No encontrado' });
-        const uuid = uuidv4();
-
-        const templatePath = path.join(__dirname, '..', 'storage', 'templates', certificado.filename);
-        const certPath = path.join(__dirname, '..', 'storage', 'signs', certificado.dependencia.certificadodigital);
-        const savePath = path.join(__dirname, '..', 'storage', 'certificates', `${uuid}.pdf`);
-
-        const nueva = new Emision({
-            certificado: certificado._id,
-            uuid,
-            subject: {
-                documento: doc,
-                nombreCompleto: fullname
-            },
-            fechaEmision: new Date(),
-            pdfHash: "-",
-            pdfPath: "-",
-            jsonPath: "-",
-            imagePath: "-",
-            transactionId: null,
-            status: 'pendiente'
-
-        });
-        await nueva.save();
+        
+        console.log('Generando PDF con datos dinámicos:', data);
 
         const resultSavePath = await generateCertificadoPdf({
             templatePath,
             paginas: certificado.paginas,
-            subject: fullname,
-            dateString: datestring,
+            data, // Usar el objeto data en lugar de campos individuales
             qrdata: `${process.env.APP_URI}/landing/${nueva._id}`,
             savePath
         });
@@ -245,19 +180,161 @@ exports.create_ethers = async (req, res) => {
 
         await nueva.save();
 
-        console.log('Minting NFT to address:', wallet.address, 'with metadata URL:', nueva.jsonPath);
+        res.status(201).json(nueva);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
+exports.create_ethers = async (req, res) => {
+    try {
+        const { doc, fullname, certificado_id, description, datestring, emite, correo, ...dynamicFields } = req.body;
         
-        const tx = await contract.mintNFT(wallet.address, emite, nueva.certificado.titulo, nueva.jsonPath);
+        // Validaciones
+        if (!doc || !fullname || !certificado_id || !emite || !correo) {
+            return res.status(400).json({ 
+                error: 'Campos requeridos: doc, fullname, certificado_id, emite, correo' 
+            });
+        }
+        
+        // Validar formato de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(correo)) {
+            return res.status(400).json({ 
+                error: 'El formato del correo electrónico no es válido' 
+            });
+        }
+        
+        const certificado = await Certificado.findById(certificado_id).populate('dependencia');
+        if (!certificado) return res.status(404).json({ error: 'No encontrado' });
+        const uuid = uuidv4();
 
-        console.log('Transaction sent. Hash:', tx);
+        const templatePath = path.join(__dirname, '..', 'storage', 'templates', certificado.filename);
+        const certPath = path.join(__dirname, '..', 'storage', 'signs', certificado.dependencia.certificadodigital);
+        const savePath = path.join(__dirname, '..', 'storage', 'certificates', `${uuid}.pdf`);
 
-        const receipt = await tx.wait();
+        const nueva = new Emision({
+            certificado: certificado._id,
+            uuid,
+            subject: {
+                documento: doc,
+                nombreCompleto: fullname,
+                correo: correo
+            },
+            fechaEmision: new Date(),
+            pdfHash: "-",
+            pdfPath: "-",
+            jsonPath: "-",
+            imagePath: "-",
+            transactionId: null,
+            status: 'pendiente'
 
-        nueva.transactionId = tx.hash;
+        });
+        await nueva.save();
+
+        // Preparar datos dinámicos para el PDF
+        const data = {
+            subject: fullname,
+            dateString: datestring,
+            date: datestring,
+            fullname: fullname,
+            doc: doc,
+            documento: doc,
+            correo: correo,
+            email: correo,
+            emite: emite,
+            ...dynamicFields // Agregar todos los campos adicionales
+        };
+        
+        console.log('Generando PDF con datos dinámicos (ethers):', data);
+
+        const resultSavePath = await generateCertificadoPdf({
+            templatePath,
+            paginas: certificado.paginas,
+            data, // Usar el objeto data en lugar de campos individuales
+            qrdata: `${process.env.APP_URI}/landing/${nueva._id}`,
+            savePath
+        });
+
+        // Generar imagen JPEG de la primera página usando pdftoppm
+        const imgDir = path.join(__dirname, '..', 'storage', 'img');
+        if (!fs.existsSync(imgDir)) fs.mkdirSync(imgDir);
+        const imgBase = path.join(imgDir, uuid);
+        const { execSync } = require('child_process');
+        execSync(`pdftoppm -jpeg -f 1 -l 1 "${resultSavePath}" "${imgBase}"`);
+        const imagePath = `${imgBase}-1.jpg`;
+
+        const resultSignedPath = await signPdf(resultSavePath, certPath, resultSavePath.replace('.pdf', '-signed.pdf'), certificado.dependencia.clave);
+
+        // Calcular hash del PDF
+        const crypto = require('crypto');
+        const pdfBuffer = fs.readFileSync(resultSignedPath);
+        const pdfHash = 'sha256:' + crypto.createHash('sha256').update(pdfBuffer).digest('hex');
+
+        // Generar JSON de metadata
+        const jsonDir = path.join(__dirname, '..', 'storage', 'json');
+        if (!fs.existsSync(jsonDir)) fs.mkdirSync(jsonDir);
+        const jsonPath = path.join(jsonDir, `${uuid}.json`);
+        const metadata = {
+            name: `Certificado de ${certificado.titulo}`,
+            description: description,
+            image: `${process.env.APP_URI}/img/${uuid}-1.jpg`,
+            pdf: `${process.env.APP_URI}/certs/${uuid}-signed.pdf`,
+            pdfhash: pdfHash,
+            json: `${process.env.APP_URI}/json/${uuid}.json`,
+            attributes: [
+                { trait_type: "document", value: doc },
+                { trait_type: "fullname", value: fullname },
+                { trait_type: "program", value: certificado.titulo },
+                { trait_type: "dependency", value: certificado.dependencia.nombre },
+                { trait_type: "issued_at", value: new Date().toISOString().split('T')[0] },
+                { trait_type: "pdfhash", value: pdfHash }
+            ]
+        };
+        fs.writeFileSync(jsonPath, JSON.stringify(metadata, null, 2));
+        fs.unlinkSync(resultSavePath);
+
+        nueva.pdfPath = `${process.env.APP_URI}/certs/${uuid}-signed.pdf`;
+        nueva.jsonPath = `${process.env.APP_URI}/json/${uuid}.json`;
+        nueva.imagePath = `${process.env.APP_URI}/img/${uuid}-1.jpg`;
+        nueva.pdfHash = pdfHash;
+        nueva.status = 'procesando';
 
         await nueva.save();
 
-        res.status(201).json(nueva);
+        // Agregar a la cola de blockchain de manera asíncrona
+        const blockchainQueue = getBlockchainQueue();
+        const jobId = await blockchainQueue.addToQueue(
+            nueva._id,
+            emite,
+            certificado.titulo,
+            nueva.jsonPath
+        );
+
+        console.log(`📤 Emisión ${nueva._id} agregada a la cola de blockchain con job ID: ${jobId}`);
+
+        // Responder inmediatamente sin esperar la transacción
+        res.status(201).json({
+            ...nueva.toObject(),
+            message: 'Emisión creada exitosamente. La transacción blockchain se está procesando en segundo plano.',
+            blockchainJobId: jobId,
+            status: 'procesando'
+        });
+
+    } catch (err) {
+        console.error('Error en create_ethers:', err);
+        res.status(400).json({ error: err.message });
+    }
+};
+
+exports.balance = async (req, res) => {
+    try {
+
+        const balance = await provider.getBalance(wallet.address);
+        res.status(201).json({
+            address: wallet.address,
+            balance: ethers.formatEther(balance) + " POL"
+        });
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
@@ -374,5 +451,236 @@ exports.verificarEmision = async (req, res) => {
             });
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+};
+
+// Obtener estadísticas de la cola de blockchain
+exports.getBlockchainQueueStats = async (req, res) => {
+    try {
+        const blockchainQueue = getBlockchainQueue();
+        const stats = blockchainQueue.getQueueStats();
+        
+        // Obtener estadísticas de emisiones por estado
+        const emisionStats = await Emision.aggregate([
+            {
+                $group: {
+                    _id: '$status',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const emisionsByStatus = emisionStats.reduce((acc, stat) => {
+            acc[stat._id || 'sin_estado'] = stat.count;
+            return acc;
+        }, {});
+
+        res.json({
+            success: true,
+            queue: stats,
+            emissions: {
+                byStatus: emisionsByStatus,
+                total: Object.values(emisionsByStatus).reduce((sum, count) => sum + count, 0)
+            },
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (err) {
+        console.error('Error obteniendo estadísticas de cola:', err);
+        res.status(500).json({ 
+            success: false,
+            error: 'Error al obtener estadísticas de blockchain',
+            details: err.message 
+        });
+    }
+};
+
+// Reenviar una emisión al blockchain
+exports.retryBlockchainTransaction = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const emision = await Emision.findById(id);
+        
+        if (!emision) {
+            return res.status(404).json({ 
+                success: false,
+                error: 'Emisión no encontrada' 
+            });
+        }
+
+        if (emision.status === 'completado') {
+            return res.status(400).json({ 
+                success: false,
+                error: 'La emisión ya está completada' 
+            });
+        }
+
+        const certificado = await Certificado.findById(emision.certificado);
+        if (!certificado) {
+            return res.status(404).json({ 
+                success: false,
+                error: 'Certificado asociado no encontrado' 
+            });
+        }
+
+        // Agregar nuevamente a la cola
+        const blockchainQueue = getBlockchainQueue();
+        const jobId = await blockchainQueue.addToQueue(
+            emision._id,
+            req.body.emite || 'retry',
+            certificado.titulo,
+            emision.jsonPath
+        );
+
+        // Actualizar estado
+        emision.status = 'reintentando';
+        await emision.save();
+
+        res.json({
+            success: true,
+            message: 'Emisión reagendada para procesamiento blockchain',
+            emisionId: emision._id,
+            blockchainJobId: jobId
+        });
+
+    } catch (err) {
+        console.error('Error reintentando transacción blockchain:', err);
+        res.status(500).json({ 
+            success: false,
+            error: 'Error al reintentar transacción blockchain',
+            details: err.message 
+        });
+    }
+};
+
+exports.forceCheckTransaction = async (req, res) => {
+    try {
+        const { emisionId } = req.params;
+        
+        // Buscar la emisión
+        const emision = await Emision.findById(emisionId);
+        if (!emision) {
+            return res.status(404).json({ error: 'Emisión no encontrada' });
+        }
+        
+        if (!emision.transactionId) {
+            return res.status(400).json({ error: 'Emisión no tiene transaction ID' });
+        }
+        
+        console.log(`🔍 Verificación manual solicitada para emisión ${emisionId}, TX: ${emision.transactionId}`);
+        
+        // Crear un job de monitoreo forzado
+        const blockchainQueue = getBlockchainQueue();
+        const jobId = blockchainQueue.addMonitoringJob(emisionId, emision.transactionId);
+        
+        res.json({
+            success: true,
+            message: 'Verificación de transacción iniciada',
+            emisionId,
+            transactionId: emision.transactionId,
+            currentStatus: emision.status,
+            monitoringJobId: jobId
+        });
+        
+    } catch (error) {
+        console.error('Error en forceCheckTransaction:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.getEmisionStatus = async (req, res) => {
+    try {
+        const { emisionId } = req.params;
+        
+        const emision = await Emision.findById(emisionId);
+        if (!emision) {
+            return res.status(404).json({ error: 'Emisión no encontrada' });
+        }
+        
+        // También obtener info del blockchain si hay transaction ID
+        let blockchainInfo = null;
+        if (emision.transactionId) {
+            try {
+                const { ethers } = require('ethers');
+                const RPC_URL = process.env.RPC_URL || "https://polygon-rpc.com";
+                const provider = new ethers.JsonRpcProvider(RPC_URL);
+                
+                const receipt = await provider.getTransactionReceipt(emision.transactionId);
+                const transaction = await provider.getTransaction(emision.transactionId);
+                
+                blockchainInfo = {
+                    transactionExists: !!transaction,
+                    isConfirmed: !!receipt,
+                    status: receipt?.status,
+                    blockNumber: receipt?.blockNumber,
+                    gasUsed: receipt?.gasUsed?.toString(),
+                    confirmations: receipt ? await provider.getBlockNumber() - receipt.blockNumber : 0
+                };
+            } catch (blockchainError) {
+                blockchainInfo = { error: blockchainError.message };
+            }
+        }
+        
+        res.json({
+            emision: {
+                id: emision._id,
+                status: emision.status,
+                transactionId: emision.transactionId,
+                updatedAt: emision.updatedAt,
+                subject: emision.subject
+            },
+            blockchain: blockchainInfo
+        });
+        
+    } catch (error) {
+        console.error('Error en getEmisionStatus:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.getProcessingEmissions = async (req, res) => {
+    try {
+        const processingEmissions = await Emision.find({ 
+            status: 'procesando',
+            transactionId: { $exists: true, $ne: null }
+        }).sort({ updatedAt: -1 });
+        
+        console.log(`🔍 Encontradas ${processingEmissions.length} emisiones en estado procesando con transaction ID`);
+        
+        const results = [];
+        for (const emision of processingEmissions) {
+            let blockchainStatus = 'unknown';
+            try {
+                const { ethers } = require('ethers');
+                const RPC_URL = process.env.RPC_URL || "https://polygon-rpc.com";
+                const provider = new ethers.JsonRpcProvider(RPC_URL);
+                
+                const receipt = await provider.getTransactionReceipt(emision.transactionId);
+                if (receipt) {
+                    blockchainStatus = receipt.status === 1 ? 'confirmed' : 'failed';
+                } else {
+                    blockchainStatus = 'pending';
+                }
+            } catch (error) {
+                blockchainStatus = `error: ${error.message}`;
+            }
+            
+            results.push({
+                id: emision._id,
+                transactionId: emision.transactionId,
+                subject: emision.subject,
+                updatedAt: emision.updatedAt,
+                blockchainStatus
+            });
+        }
+        
+        res.json({
+            count: results.length,
+            emissions: results
+        });
+        
+    } catch (error) {
+        console.error('Error en getProcessingEmissions:', error);
+        res.status(500).json({ error: error.message });
     }
 };

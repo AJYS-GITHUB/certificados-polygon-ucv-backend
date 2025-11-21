@@ -5,9 +5,15 @@ const router = express.Router();
 const emisionController = require('../controllers/emisionController');
 
 router.get('/', emisionController.getAll);
+router.get('/balance', emisionController.balance);
+router.get('/queue/stats', emisionController.getBlockchainQueueStats);
+router.get('/processing', emisionController.getProcessingEmissions);
 router.get('/:id', emisionController.getById);
+router.get('/:id/status', emisionController.getEmisionStatus);
 router.post('/', emisionController.create);
 router.post('/ethers', emisionController.create_ethers);
+router.post('/:id/retry-blockchain', emisionController.retryBlockchainTransaction);
+router.post('/:id/force-check', emisionController.forceCheckTransaction);
 router.put('/:id', emisionController.update);
 router.delete('/:id', emisionController.delete);
 router.put('/completar/:id', emisionController.completarEmision);
