@@ -15,8 +15,12 @@ const storage = multer.diskStorage({
         cb(null, assetsDir);
     },
     filename: function (req, file, cb) {
+        // Generar nombre consistente: timestamp + sufijo aleatorio + extensión original
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+        const ext = path.extname(file.originalname);
+        const basename = path.basename(file.originalname, ext);
+        // Nombre final: basename-timestamp-random.ext
+        cb(null, basename + '-' + uniqueSuffix + ext);
     }
 });
 
@@ -232,8 +236,19 @@ exports.uploadAsset = async (req, res) => {
             tipo = 'css';
         }
 
-        const baseUrl = process.env.APP_URI || 'http://localhost:3000';
+        // Construir URL dinámica basada en la solicitud actual
+        const protocol = req.protocol || 'http';
+        const host = req.get('host') || 'localhost:3000';
+        const baseUrl = process.env.APP_URI || `${protocol}://${host}`;
         const assetUrl = `${baseUrl}/email-assets/${req.file.filename}`;
+        
+        console.log('Asset upload info:', {
+            filename: req.file.filename,
+            path: req.file.path,
+            baseUrl,
+            assetUrl,
+            exists: fs.existsSync(req.file.path)
+        });
 
         const asset = {
             nombre: req.file.originalname,
@@ -258,6 +273,39 @@ exports.uploadAsset = async (req, res) => {
         if (req.file && fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);
         }
+        res.status(500).json({ error: err.message });
+    }
+};
+
+/**
+ * Descargar/servir un asset específico
+ */
+exports.downloadAsset = async (req, res) => {
+    try {
+        const { id, assetFilename } = req.params;
+        
+        const correo = await Correo.findById(id);
+        if (!correo) {
+            return res.status(404).json({ error: 'Plantilla de correo no encontrada' });
+        }
+
+        const asset = correo.assets.find(a => a.filename === assetFilename);
+        if (!asset) {
+            return res.status(404).json({ error: 'Asset no encontrado' });
+        }
+
+        // Construir ruta del archivo
+        const filePath = path.join(__dirname, '..', 'public', 'email-assets', assetFilename);
+
+        // Verificar que el archivo existe
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ error: `Archivo no encontrado en disco: ${assetFilename}` });
+        }
+
+        // Enviar el archivo
+        res.download(filePath, asset.nombre);
+    } catch (err) {
+        console.error('Error en downloadAsset:', err);
         res.status(500).json({ error: err.message });
     }
 };

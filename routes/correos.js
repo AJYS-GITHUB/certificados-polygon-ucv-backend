@@ -12,6 +12,7 @@ router.delete('/:id', correoController.delete);
 // Rutas para manejo de assets
 router.get('/:id/assets', correoController.getAssets);
 router.get('/:id/assets/:assetFilename/url', correoController.getAssetUrl);
+router.get('/:id/assets/:assetFilename/download', correoController.downloadAsset);
 router.post('/:id/assets', correoController.uploadMiddleware, (err, req, res, next) => {
   if (err) {
     console.error('Multer error:', err);
