@@ -232,7 +232,7 @@ exports.uploadAsset = async (req, res) => {
             tipo = 'css';
         }
 
-        const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+        const baseUrl = process.env.APP_URI || 'http://localhost:3000';
         const assetUrl = `${baseUrl}/email-assets/${req.file.filename}`;
 
         const asset = {
