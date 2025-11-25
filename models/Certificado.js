@@ -6,6 +6,11 @@ const CertificadoSchema = new mongoose.Schema({
     ref: 'Dependencia',
     required: true
   },
+  plantillaCorreo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Correo',
+    default: null
+  },
   titulo: {
     type: String,
     required: true

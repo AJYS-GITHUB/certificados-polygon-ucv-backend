@@ -17,7 +17,7 @@ exports.getAll = async (req, res) => {
       const skip = (page - 1) * limit;
 
       const [items, total] = await Promise.all([
-         Certificado.find().skip(skip).limit(limit).populate('dependencia'),
+         Certificado.find().skip(skip).limit(limit).populate('dependencia').populate('plantillaCorreo'),
          Certificado.countDocuments()
       ]);
 
@@ -35,7 +35,7 @@ exports.getAll = async (req, res) => {
 // Obtener certificado por ID
 exports.getById = async (req, res) => {
    try {
-      const certificado = await Certificado.findById(req.params.id).populate('dependencia');
+      const certificado = await Certificado.findById(req.params.id).populate('dependencia').populate('plantillaCorreo');
       if (!certificado) return res.status(404).json({ error: 'No encontrado' });
       res.json(certificado);
    } catch (err) {

@@ -19,6 +19,8 @@ const fileRouter = require('./routes/files');
 const validacionRouter = require('./routes/validacion');
 const fontsRouter = require('./routes/fonts');
 const signaturesRouter = require('./routes/signatures');
+const correosRouter = require('./routes/correos');
+const emailsRouter = require('./routes/emails');
 
 const auth = require('./middlewares/auth');
 
@@ -69,6 +71,7 @@ app.use('/json', express.static(path.join(__dirname, 'storage', 'json')));
 app.use('/uploaded-fonts', express.static(path.join(__dirname, 'storage', 'fonts')));
 app.use('/test', express.static(path.join(__dirname, 'storage', 'test')));
 app.use('/logos', express.static(path.join(__dirname, 'storage', 'logos')));
+app.use('/email-assets', express.static(path.join(__dirname, 'public', 'email-assets')));
 
 connectDB();
 
@@ -92,6 +95,8 @@ app.use('/dependencias', dependenciasRouter);
 app.use('/files', fileRouter);
 app.use('/fonts', fontsRouter);
 app.use('/signatures', signaturesRouter);
+app.use('/correos', correosRouter);
+app.use('/emails', emailsRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -100,11 +105,22 @@ app.use(function (req, res, next) {
 
 // error handler
 app.use(function (err, req, res, next) {
+  console.error('Error caught by handler:', err);
+  
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
+  // For API endpoints, return JSON error
+  if (req.path.startsWith('/correos') || req.path.startsWith('/certificados') || req.path.startsWith('/emisiones')) {
+    return res.status(err.status || 500).json({
+      error: err.message,
+      status: err.status || 500,
+      details: req.app.get('env') === 'development' ? err : undefined
+    });
+  }
+
+  // render the error page for other routes
   res.status(err.status || 500);
   res.render('error');
 });

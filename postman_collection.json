@@ -1,0 +1,1280 @@
+{
+	"info": {
+		"_postman_id": "ucv-certificados-api",
+		"name": "UCV Certificados API",
+		"description": "Colección completa de endpoints para el sistema de certificados digitales UCV",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Certificados",
+			"item": [
+				{
+					"name": "Listar Certificados",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/certificados?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["certificados"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Obtener Certificado por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/certificados/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["certificados", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Crear Certificado",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"dependencia\": \"dependencia_id\",\n  \"plantillaCorreo\": \"correo_id\",\n  \"titulo\": \"Certificado de Excelencia\",\n  \"contractAddress\": \"0x...\",\n  \"contractUrl\": \"https://polygonscan.com/address/0x...\",\n  \"paginas\": [\n    {\n      \"numero\": 1,\n      \"contenido\": \"subject\",\n      \"font\": \"Helvetica\",\n      \"fontSize\": 20,\n      \"color\": \"#000000\",\n      \"x\": 100,\n      \"y\": 200,\n      \"width\": 400,\n      \"height\": 50,\n      \"textAlign\": \"center\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/certificados",
+							"host": ["{{baseUrl}}"],
+							"path": ["certificados"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar Certificado",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titulo\": \"Certificado Actualizado\",\n  \"plantillaCorreo\": \"nuevo_correo_id\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/certificados/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["certificados", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Certificado",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/certificados/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["certificados", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Subir PDF del Certificado",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "pdf",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/certificados/:id/upload-pdf",
+							"host": ["{{baseUrl}}"],
+							"path": ["certificados", ":id", "upload-pdf"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Emisiones",
+			"item": [
+				{
+					"name": "Listar Emisiones",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/emisiones?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["emisiones"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Obtener Emisión por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["emisiones", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Crear Emisión (Ethers)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"doc\": \"12345678\",\n  \"fullname\": \"Juan Pérez\",\n  \"certificado_id\": \"certificado_id\",\n  \"description\": \"Certificado de Excelencia\",\n  \"datestring\": \"2024-01-01\",\n  \"emite\": \"UCV Facultad de Ingeniería\",\n  \"correo\": \"juan@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/ethers",
+							"host": ["{{baseUrl}}"],
+							"path": ["emisiones", "ethers"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar Emisión",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"completado\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["emisiones", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Emisión",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["emisiones", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Balance de Wallet",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/balance",
+							"host": ["{{baseUrl}}"],
+							"path": ["emisiones", "balance"]
+						}
+					}
+				},
+				{
+					"name": "Estadísticas de Cola Blockchain",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/queue/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["emisiones", "queue", "stats"]
+						}
+					}
+				},
+				{
+					"name": "Emisiones en Procesamiento",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/processing",
+							"host": ["{{baseUrl}}"],
+							"path": ["emisiones", "processing"]
+						}
+					}
+				},
+				{
+					"name": "Estado de Emisión",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/:id/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["emisiones", ":id", "status"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Forzar Verificación de Transacción",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/:id/force-check",
+							"host": ["{{baseUrl}}"],
+							"path": ["emisiones", ":id", "force-check"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Reintentar Transacción Blockchain",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/:id/retry-blockchain",
+							"host": ["{{baseUrl}}"],
+							"path": ["emisiones", ":id", "retry-blockchain"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Verificar Emisión (CSV)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "csv",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/verificar",
+							"host": ["{{baseUrl}}"],
+							"path": ["emisiones", "verificar"]
+						}
+					}
+				},
+				{
+					"name": "Completar Emisión",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"transactionId\": \"0x...\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/completar/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["emisiones", "completar", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Dependencias",
+			"item": [
+				{
+					"name": "Listar Dependencias",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dependencias?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["dependencias"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Obtener Dependencia por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dependencias/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["dependencias", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Crear Dependencia",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Facultad de Ingeniería\",\n  \"clave\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/dependencias",
+							"host": ["{{baseUrl}}"],
+							"path": ["dependencias"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar Dependencia",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Facultad de Ingeniería Actualizada\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/dependencias/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["dependencias", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Dependencia",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dependencias/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["dependencias", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Subir Certificado Digital",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "certificado",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/dependencias/:id/upload-certificado",
+							"host": ["{{baseUrl}}"],
+							"path": ["dependencias", ":id", "upload-certificado"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Usuarios",
+			"item": [
+				{
+					"name": "Listar Usuarios",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["usuarios"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Obtener Usuario por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["usuarios", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Crear Usuario",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Juan Pérez\",\n  \"email\": \"juan@example.com\",\n  \"password\": \"password123\",\n  \"rol\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios",
+							"host": ["{{baseUrl}}"],
+							"path": ["usuarios"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar Usuario",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Juan Pérez Actualizado\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["usuarios", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Usuario",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["usuarios", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Validación",
+			"item": [
+				{
+					"name": "Validar Certificado por UUID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/validacion/:uuid",
+							"host": ["{{baseUrl}}"],
+							"path": ["validacion", ":uuid"],
+							"variable": [
+								{
+									"key": "uuid",
+									"value": ""
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Fuentes",
+			"item": [
+				{
+					"name": "Listar Fuentes Disponibles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/fonts",
+							"host": ["{{baseUrl}}"],
+							"path": ["fonts"]
+						}
+					}
+				},
+				{
+					"name": "Subir Fuente Personalizada",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "font",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "name",
+									"value": "MiFuente",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/fonts/upload",
+							"host": ["{{baseUrl}}"],
+							"path": ["fonts", "upload"]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Fuente",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/fonts/:fontName",
+							"host": ["{{baseUrl}}"],
+							"path": ["fonts", ":fontName"],
+							"variable": [
+								{
+									"key": "fontName",
+									"value": ""
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Firmas",
+			"item": [
+				{
+					"name": "Listar Firmas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/signatures",
+							"host": ["{{baseUrl}}"],
+							"path": ["signatures"]
+						}
+					}
+				},
+				{
+					"name": "Generar Firma",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Dr. Juan Pérez\",\n  \"cargo\": \"Director\",\n  \"dependencia\": \"Facultad de Ingeniería\",\n  \"fecha\": \"2024-01-01\",\n  \"width\": 400,\n  \"height\": 200,\n  \"template\": \"default\",\n  \"logoPath\": \"/path/to/logo.png\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/signatures/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["signatures", "generate"]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Firma",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/signatures/:filename",
+							"host": ["{{baseUrl}}"],
+							"path": ["signatures", ":filename"],
+							"variable": [
+								{
+									"key": "filename",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Subir Logo",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "logo",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/signatures/upload-logo",
+							"host": ["{{baseUrl}}"],
+							"path": ["signatures", "upload-logo"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Correos",
+			"item": [
+				{
+					"name": "Listar Plantillas de Correo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/correos?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["correos"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Obtener Plantilla por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/correos/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["correos", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Crear Plantilla de Correo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"certificado-emitido\",\n  \"asunto\": \"Tu certificado ha sido emitido\",\n  \"contenidoHtml\": \"<h1>Hola {{nombreUsuario}}</h1><p>Tu certificado {{nombreCertificado}} ha sido emitido exitosamente.</p>\",\n  \"descripcion\": \"Plantilla para notificar emisión de certificados\",\n  \"cc\": [\"supervisor@example.com\"],\n  \"cco\": [\"auditoria@example.com\"],\n  \"variables\": [\n    {\n      \"nombre\": \"nombreUsuario\",\n      \"descripcion\": \"Nombre completo del usuario\",\n      \"ejemplo\": \"Juan Pérez\"\n    },\n    {\n      \"nombre\": \"nombreCertificado\",\n      \"descripcion\": \"Nombre del certificado\",\n      \"ejemplo\": \"Certificado de Excelencia\"\n    }\n  ],\n  \"activo\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/correos",
+							"host": ["{{baseUrl}}"],
+							"path": ["correos"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar Plantilla de Correo",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"asunto\": \"Asunto actualizado\",\n  \"cc\": [\"supervisor@example.com\"],\n  \"cco\": [\"auditoria@example.com\"],\n  \"activo\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/correos/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["correos", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Plantilla de Correo",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/correos/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["correos", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Listar Assets de Plantilla",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/correos/:id/assets",
+							"host": ["{{baseUrl}}"],
+							"path": ["correos", ":id", "assets"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Subir Asset a Plantilla",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Description",
+								"value": "Sube un archivo (imagen, CSS, HTML) para una plantilla. El campo puede ser: 'file', 'asset', 'document', o 'files'",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": [],
+									"disabled": false
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/correos/:id/assets",
+							"host": ["{{baseUrl}}"],
+							"path": ["correos", ":id", "assets"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Asset de Plantilla",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/correos/:id/assets/:assetId",
+							"host": ["{{baseUrl}}"],
+							"path": ["correos", ":id", "assets", ":assetId"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								},
+								{
+									"key": "assetId",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Vista Previa de Plantilla",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/correos/:id/preview",
+							"host": ["{{baseUrl}}"],
+							"path": ["correos", ":id", "preview"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Obtener URL de Asset Específico",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/correos/:id/assets/:assetFilename/url",
+							"host": ["{{baseUrl}}"],
+							"path": ["correos", ":id", "assets", ":assetFilename", "url"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								},
+								{
+									"key": "assetFilename",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Obtener Plantilla con URLs de Assets Formateadas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/correos/:id/with-assets",
+							"host": ["{{baseUrl}}"],
+							"path": ["correos", ":id", "with-assets"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Renderizar HTML con Variables",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"variables\": {\n    \"nombre\": \"Juan Pérez\",\n    \"certificado\": \"Certificado de Excelencia\",\n    \"fecha\": \"2024-01-21\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/correos/:id/render",
+							"host": ["{{baseUrl}}"],
+							"path": ["correos", ":id", "render"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Generar HTML Completo para Preview",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/correos/:id/preview-code",
+							"host": ["{{baseUrl}}"],
+							"path": ["correos", ":id", "preview-code"],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Emails",
+			"item": [
+				{
+					"name": "Obtener Estado del Servicio de Email",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/emails/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["emails", "status"]
+						}
+					}
+				},
+				{
+					"name": "Obtener Estadísticas de Envío",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/emails/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["emails", "stats"]
+						}
+					}
+				},
+				{
+					"name": "Enviar Correo de Prueba",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"toEmail\": \"usuario@example.com\",\n  \"correoTemplateId\": \"id_plantilla_aqui\",\n  \"cc\": [\"adicional-cc@example.com\"],\n  \"cco\": [\"adicional-cco@example.com\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/emails/test",
+							"host": ["{{baseUrl}}"],
+							"path": ["emails", "test"]
+						}
+					}
+				},
+				{
+					"name": "Enviar Correo a Emisión Específica",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"correoTemplateId\": \"id_plantilla_aqui\",\n  \"cc\": [\"adicional-cc@example.com\"],\n  \"cco\": [\"adicional-cco@example.com\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/emails/emision/:id/send",
+							"host": ["{{baseUrl}}"],
+							"path": ["emails", "emision", ":id", "send"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "id_emision_aqui"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Enviar Correos a Múltiples Emisiones",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emisionIds\": [\"id1\", \"id2\", \"id3\"],\n  \"correoTemplateId\": \"id_plantilla_aqui\",\n  \"cc\": [\"adicional-cc@example.com\"],\n  \"cco\": [\"adicional-cco@example.com\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/emails/emisions/send",
+							"host": ["{{baseUrl}}"],
+							"path": ["emails", "emisions", "send"]
+						}
+					}
+				},
+				{
+					"name": "Enviar Correos Pendientes",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"correoTemplateId\": \"id_plantilla_aqui\",\n  \"cc\": [\"adicional-cc@example.com\"],\n  \"cco\": [\"adicional-cco@example.com\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/emails/pending/send",
+							"host": ["{{baseUrl}}"],
+							"path": ["emails", "pending", "send"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Files",
+			"item": [
+				{
+					"name": "Subir Archivo",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/files/upload",
+							"host": ["{{baseUrl}}"],
+							"path": ["files", "upload"]
+						}
+					}
+				}
+			]
+		}
+	]
+}
