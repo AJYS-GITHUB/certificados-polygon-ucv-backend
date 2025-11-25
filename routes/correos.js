@@ -13,13 +13,7 @@ router.delete('/:id', correoController.delete);
 router.get('/:id/assets', correoController.getAssets);
 router.get('/:id/assets/:assetFilename/url', correoController.getAssetUrl);
 router.get('/:id/assets/:assetFilename/download', correoController.downloadAsset);
-router.post('/:id/assets', correoController.uploadMiddleware, (err, req, res, next) => {
-  if (err) {
-    console.error('Multer error:', err);
-    return res.status(400).json({ error: err.message });
-  }
-  next();
-}, correoController.uploadAsset);
+router.post('/:id/assets', correoController.uploadMiddleware, correoController.uploadAsset);
 router.delete('/:id/assets/:assetId', correoController.deleteAsset);
 
 // Ruta para vista previa

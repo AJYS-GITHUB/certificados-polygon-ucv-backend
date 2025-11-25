@@ -46,25 +46,36 @@ const upload = multer({
 // Exportar middleware de multer para subidas de archivos
 // Acepta archivo en campos: file, asset, document, o files (pero solo un archivo)
 exports.uploadMiddleware = (req, res, next) => {
-    // Intentar con 'file' primero, luego otros nombres comunes
+    // Intentar con múltiples nombres de campo
     const fieldNames = ['file', 'asset', 'document', 'files'];
-    let middleware;
-    
-    for (let field of fieldNames) {
-        middleware = upload.single(field);
-        // Ejecutar middleware
-        middleware(req, res, (err) => {
-            if (err && err.code === 'LIMIT_PART_COUNT') {
+    let attemptIndex = 0;
+
+    const tryNextField = () => {
+        if (attemptIndex >= fieldNames.length) {
+            // Si ninguno funcionó, ejecutar con 'file' para capturar el error
+            return upload.single('file')(req, res, next);
+        }
+
+        const field = fieldNames[attemptIndex];
+        attemptIndex++;
+
+        upload.single(field)(req, res, (err) => {
+            if (err) {
+                console.error(`Multer error with field '${field}':`, err);
                 return next(err);
             }
+            
             if (req.file) {
+                // Archivo subido exitosamente
                 return next();
             }
+            
+            // Este campo no tenía archivo, probar el siguiente
+            tryNextField();
         });
-    }
-    
-    // Si llegamos aquí y no hay archivo, ejecutar uno para capturar el error
-    upload.single('file')(req, res, next);
+    };
+
+    tryNextField();
 };
 
 /**
