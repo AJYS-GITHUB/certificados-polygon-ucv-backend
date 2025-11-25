@@ -35,18 +35,18 @@ const verifyTransporter = async () => {
  */
 const renderEmailTemplate = (templateHtml, emision) => {
     let html = templateHtml;
-    
+
     // Variables disponibles
     const variables = {
         'nombre': emision.subject.nombreCompleto,
         'documento': emision.subject.documento,
         'email': emision.subject.correo,
         'fecha': new Date(emision.fechaEmision).toLocaleDateString('es-ES'),
-        'fechaLarga': new Date(emision.fechaEmision).toLocaleDateString('es-ES', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        'fechaLarga': new Date(emision.fechaEmision).toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         }),
         'uuid': emision.uuid
     };
@@ -75,12 +75,12 @@ exports.sendEmailToEmision = async (emisionId, correoTemplateId, cc, cco) => {
             throw new Error('Emisión no encontrada');
         }
 
-        // Obtener plantilla de correo
+        // Obtener plantilla de correo (prioridad: certificado.plantillaCorreo, luego correoTemplateId)
         let correoTemplate;
-        if (correoTemplateId) {
-            correoTemplate = await Correo.findById(correoTemplateId);
-        } else if (emision.certificado && emision.certificado.plantillaCorreo) {
+        if (emision.certificado && emision.certificado.plantillaCorreo) {
             correoTemplate = await Correo.findById(emision.certificado.plantillaCorreo);
+        } else if (correoTemplateId) {
+            correoTemplate = await Correo.findById(correoTemplateId);
         }
 
         if (!correoTemplate) {
@@ -92,7 +92,7 @@ exports.sendEmailToEmision = async (emisionId, correoTemplateId, cc, cco) => {
 
         // Obtener ruta del PDF
         let pdfPath = emision.pdfPath;
-        
+
         // Extraer solo el nombre del archivo (sin dominio ni ruta)
         let filename = pdfPath;
         if (pdfPath.startsWith('http://') || pdfPath.startsWith('https://')) {
@@ -103,7 +103,7 @@ exports.sendEmailToEmision = async (emisionId, correoTemplateId, cc, cco) => {
             // Si es una ruta relativa, extraer solo el nombre del archivo
             filename = path.basename(pdfPath);
         }
-        
+
         // Construir ruta completa en la carpeta storage
         pdfPath = path.join(__dirname, '..', 'storage/certificates', filename);
 
@@ -207,28 +207,60 @@ exports.sendEmailsToEmisions = async (emisionIds, correoTemplateId, cc, cco) => 
  */
 exports.sendPendingEmails = async (correoTemplateId, cc, cco) => {
     try {
-        // Obtener emisiones con emailSended = false
+        // Obtener emisiones con emailSended = false y popular certificado con plantillaCorreo
         const emisions = await Emision.find({ emailSended: false })
-            .populate('certificado')
-            .select('_id');
+            .populate({
+                path: 'certificado',
+                populate: { path: 'plantillaCorreo' }
+            });
 
-        const emisionIds = emisions.map(e => e._id);
-
-        if (emisionIds.length === 0) {
+        if (emisions.length === 0) {
             return {
                 success: true,
                 message: 'No hay emisiones pendientes de envío',
                 sent: [],
                 failed: [],
+                skipped: [],
                 total: 0
             };
         }
 
-        const results = await exports.sendEmailsToEmisions(emisionIds, correoTemplateId, cc, cco);
+        // Filtrar emisiones que tienen plantilla (certificado o parámetro)
+        const emisionsWithTemplate = [];
+        const emisionsSkipped = [];
+
+        for (const emision of emisions) {
+            const hasTemplate = (emision.certificado && emision.certificado.plantillaCorreo) || correoTemplateId;
+            if (hasTemplate) {
+                emisionsWithTemplate.push(emision._id);
+            } else {
+                emisionsSkipped.push({
+                    emisionId: emision._id.toString(),
+                    uuid: emision.uuid,
+                    email: emision.subject.correo,
+                    reason: 'No hay plantilla de correo configurada'
+                });
+            }
+        }
+
+        // Enviar correos solo a las que tienen plantilla
+        let results = {
+            sent: [],
+            failed: [],
+            total: emisions.length
+        };
+
+        if (emisionsWithTemplate.length > 0) {
+            results = await exports.sendEmailsToEmisions(emisionsWithTemplate, correoTemplateId, cc, cco);
+        }
 
         return {
             success: true,
-            ...results
+            sent: results.sent,
+            failed: results.failed,
+            skipped: emisionsSkipped,
+            total: emisions.length,
+            processed: emisionsWithTemplate.length
         };
     } catch (err) {
         console.error('Error sending pending emails:', err);

@@ -15,10 +15,16 @@ exports.getAll = async (req, res) => {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 100;
       const skip = (page - 1) * limit;
+      const search = req.query.search || '';
+
+      const query = {};
+      if (search) {
+         query.titulo = { $regex: search, $options: 'i' };
+      }
 
       const [items, total] = await Promise.all([
-         Certificado.find().skip(skip).limit(limit).populate('dependencia').populate('plantillaCorreo'),
-         Certificado.countDocuments()
+         Certificado.find(query).skip(skip).limit(limit).populate('dependencia').populate('plantillaCorreo'),
+         Certificado.countDocuments(query)
       ]);
 
       res.json({
@@ -86,37 +92,37 @@ exports.generatePdf = async (req, res) => {
    const uuid = uuidv4();
    const qrdata = `${process.env.APP_URI}/verificar/${uuid}`;
    const savePath = path.join(__dirname, '..', 'storage', 'certificates', `${uuid}.pdf`);
-   
+
    try {
       // Preparar datos dinámicos para el PDF
       const data = {
          // Campos tradicionales (para compatibilidad)
          subject: dynamicFields.fullname || dynamicFields.subject,
          dateString: dynamicFields.datestring || dynamicFields.date,
-         
+
          // Todos los campos dinámicos enviados en el request
          ...dynamicFields
       };
-      
+
       console.log('Datos dinámicos recibidos:', data);
-      
-      const resultSavePath = await generateCertificadoPdf({ 
-         templatePath, 
-         paginas: certificado.paginas, 
-         data, 
-         qrdata, 
-         savePath 
+
+      const resultSavePath = await generateCertificadoPdf({
+         templatePath,
+         paginas: certificado.paginas,
+         data,
+         qrdata,
+         savePath
       });
 
-      res.json({ 
+      res.json({
          pdfFilename: `${uuid}.pdf`,
          message: 'PDF generado exitosamente con campos dinámicos'
       });
    } catch (error) {
       console.error('Error generating PDF:', error);
-      res.status(500).json({ 
-         error: 'Error generating PDF', 
-         details: error.message 
+      res.status(500).json({
+         error: 'Error generating PDF',
+         details: error.message
       });
    }
 };

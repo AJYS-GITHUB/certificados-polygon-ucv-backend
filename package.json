@@ -22,7 +22,7 @@
     "jade": "^1.9.2",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
-    "moongose": "^1.0.0",
+    "mongoose": "^8.0.0",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "node-signpdf": "^3.0.0",

@@ -32,8 +32,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/auth/login",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "login"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
 						}
 					}
 				}
@@ -49,8 +54,12 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/certificados?page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["certificados"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"certificados"
+							],
 							"query": [
 								{
 									"key": "page",
@@ -59,6 +68,11 @@
 								{
 									"key": "limit",
 									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": "",
+									"description": "Filtro por título del certificado"
 								}
 							]
 						}
@@ -71,8 +85,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/certificados/:id",
-							"host": ["{{baseUrl}}"],
-							"path": ["certificados", ":id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"certificados",
+								":id"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -98,8 +117,12 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/certificados",
-							"host": ["{{baseUrl}}"],
-							"path": ["certificados"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"certificados"
+							]
 						}
 					}
 				},
@@ -119,8 +142,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/certificados/:id",
-							"host": ["{{baseUrl}}"],
-							"path": ["certificados", ":id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"certificados",
+								":id"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -137,8 +165,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/certificados/:id",
-							"host": ["{{baseUrl}}"],
-							"path": ["certificados", ":id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"certificados",
+								":id"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -165,8 +198,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/certificados/:id/upload-pdf",
-							"host": ["{{baseUrl}}"],
-							"path": ["certificados", ":id", "upload-pdf"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"certificados",
+								":id",
+								"upload-pdf"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -188,8 +227,12 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/emisiones?page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["emisiones"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones"
+							],
 							"query": [
 								{
 									"key": "page",
@@ -210,8 +253,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/emisiones/:id",
-							"host": ["{{baseUrl}}"],
-							"path": ["emisiones", ":id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								":id"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -237,8 +285,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/emisiones/ethers",
-							"host": ["{{baseUrl}}"],
-							"path": ["emisiones", "ethers"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								"ethers"
+							]
 						}
 					}
 				},
@@ -258,8 +311,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/emisiones/:id",
-							"host": ["{{baseUrl}}"],
-							"path": ["emisiones", ":id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								":id"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -276,8 +334,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/emisiones/:id",
-							"host": ["{{baseUrl}}"],
-							"path": ["emisiones", ":id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								":id"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -294,8 +357,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/emisiones/balance",
-							"host": ["{{baseUrl}}"],
-							"path": ["emisiones", "balance"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								"balance"
+							]
 						}
 					}
 				},
@@ -306,8 +374,14 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/emisiones/queue/stats",
-							"host": ["{{baseUrl}}"],
-							"path": ["emisiones", "queue", "stats"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								"queue",
+								"stats"
+							]
 						}
 					}
 				},
@@ -318,8 +392,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/emisiones/processing",
-							"host": ["{{baseUrl}}"],
-							"path": ["emisiones", "processing"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								"processing"
+							]
 						}
 					}
 				},
@@ -330,8 +409,14 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/emisiones/:id/status",
-							"host": ["{{baseUrl}}"],
-							"path": ["emisiones", ":id", "status"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								":id",
+								"status"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -348,8 +433,14 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/emisiones/:id/force-check",
-							"host": ["{{baseUrl}}"],
-							"path": ["emisiones", ":id", "force-check"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								":id",
+								"force-check"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -366,8 +457,14 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/emisiones/:id/retry-blockchain",
-							"host": ["{{baseUrl}}"],
-							"path": ["emisiones", ":id", "retry-blockchain"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								":id",
+								"retry-blockchain"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -394,8 +491,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/emisiones/verificar",
-							"host": ["{{baseUrl}}"],
-							"path": ["emisiones", "verificar"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								"verificar"
+							]
 						}
 					}
 				},
@@ -415,8 +517,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/emisiones/completar/:id",
-							"host": ["{{baseUrl}}"],
-							"path": ["emisiones", "completar", ":id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								"completar",
+								":id"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -438,8 +546,12 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/dependencias?page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["dependencias"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"dependencias"
+							],
 							"query": [
 								{
 									"key": "page",
@@ -460,8 +572,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/dependencias/:id",
-							"host": ["{{baseUrl}}"],
-							"path": ["dependencias", ":id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"dependencias",
+								":id"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -487,8 +604,12 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/dependencias",
-							"host": ["{{baseUrl}}"],
-							"path": ["dependencias"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"dependencias"
+							]
 						}
 					}
 				},
@@ -508,8 +629,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/dependencias/:id",
-							"host": ["{{baseUrl}}"],
-							"path": ["dependencias", ":id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"dependencias",
+								":id"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -526,8 +652,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/dependencias/:id",
-							"host": ["{{baseUrl}}"],
-							"path": ["dependencias", ":id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"dependencias",
+								":id"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -554,8 +685,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/dependencias/:id/upload-certificado",
-							"host": ["{{baseUrl}}"],
-							"path": ["dependencias", ":id", "upload-certificado"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"dependencias",
+								":id",
+								"upload-certificado"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -577,8 +714,12 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/usuarios?page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["usuarios"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios"
+							],
 							"query": [
 								{
 									"key": "page",
@@ -599,8 +740,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/usuarios/:id",
-							"host": ["{{baseUrl}}"],
-							"path": ["usuarios", ":id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								":id"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -626,8 +772,12 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/usuarios",
-							"host": ["{{baseUrl}}"],
-							"path": ["usuarios"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios"
+							]
 						}
 					}
 				},
@@ -647,8 +797,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/usuarios/:id",
-							"host": ["{{baseUrl}}"],
-							"path": ["usuarios", ":id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								":id"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -665,8 +820,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/usuarios/:id",
-							"host": ["{{baseUrl}}"],
-							"path": ["usuarios", ":id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								":id"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -688,8 +848,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/validacion/:uuid",
-							"host": ["{{baseUrl}}"],
-							"path": ["validacion", ":uuid"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"validacion",
+								":uuid"
+							],
 							"variable": [
 								{
 									"key": "uuid",
@@ -711,8 +876,12 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/fonts",
-							"host": ["{{baseUrl}}"],
-							"path": ["fonts"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"fonts"
+							]
 						}
 					}
 				},
@@ -738,8 +907,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/fonts/upload",
-							"host": ["{{baseUrl}}"],
-							"path": ["fonts", "upload"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"fonts",
+								"upload"
+							]
 						}
 					}
 				},
@@ -750,8 +924,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/fonts/:fontName",
-							"host": ["{{baseUrl}}"],
-							"path": ["fonts", ":fontName"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"fonts",
+								":fontName"
+							],
 							"variable": [
 								{
 									"key": "fontName",
@@ -773,8 +952,12 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/signatures",
-							"host": ["{{baseUrl}}"],
-							"path": ["signatures"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"signatures"
+							]
 						}
 					}
 				},
@@ -794,8 +977,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/signatures/generate",
-							"host": ["{{baseUrl}}"],
-							"path": ["signatures", "generate"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"signatures",
+								"generate"
+							]
 						}
 					}
 				},
@@ -806,8 +994,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/signatures/:filename",
-							"host": ["{{baseUrl}}"],
-							"path": ["signatures", ":filename"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"signatures",
+								":filename"
+							],
 							"variable": [
 								{
 									"key": "filename",
@@ -834,8 +1027,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/signatures/upload-logo",
-							"host": ["{{baseUrl}}"],
-							"path": ["signatures", "upload-logo"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"signatures",
+								"upload-logo"
+							]
 						}
 					}
 				}
@@ -851,8 +1049,12 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/correos?page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["correos"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"correos"
+							],
 							"query": [
 								{
 									"key": "page",
@@ -873,8 +1075,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/correos/:id",
-							"host": ["{{baseUrl}}"],
-							"path": ["correos", ":id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"correos",
+								":id"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -900,8 +1107,12 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/correos",
-							"host": ["{{baseUrl}}"],
-							"path": ["correos"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"correos"
+							]
 						}
 					}
 				},
@@ -921,8 +1132,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/correos/:id",
-							"host": ["{{baseUrl}}"],
-							"path": ["correos", ":id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"correos",
+								":id"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -939,8 +1155,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/correos/:id",
-							"host": ["{{baseUrl}}"],
-							"path": ["correos", ":id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"correos",
+								":id"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -957,8 +1178,14 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/correos/:id/assets",
-							"host": ["{{baseUrl}}"],
-							"path": ["correos", ":id", "assets"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"correos",
+								":id",
+								"assets"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -992,8 +1219,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/correos/:id/assets",
-							"host": ["{{baseUrl}}"],
-							"path": ["correos", ":id", "assets"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"correos",
+								":id",
+								"assets"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -1010,8 +1243,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/correos/:id/assets/:assetId",
-							"host": ["{{baseUrl}}"],
-							"path": ["correos", ":id", "assets", ":assetId"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"correos",
+								":id",
+								"assets",
+								":assetId"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -1032,8 +1272,14 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/correos/:id/preview",
-							"host": ["{{baseUrl}}"],
-							"path": ["correos", ":id", "preview"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"correos",
+								":id",
+								"preview"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -1050,8 +1296,16 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/correos/:id/assets/:assetFilename/url",
-							"host": ["{{baseUrl}}"],
-							"path": ["correos", ":id", "assets", ":assetFilename", "url"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"correos",
+								":id",
+								"assets",
+								":assetFilename",
+								"url"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -1072,8 +1326,14 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/correos/:id/with-assets",
-							"host": ["{{baseUrl}}"],
-							"path": ["correos", ":id", "with-assets"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"correos",
+								":id",
+								"with-assets"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -1099,8 +1359,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/correos/:id/render",
-							"host": ["{{baseUrl}}"],
-							"path": ["correos", ":id", "render"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"correos",
+								":id",
+								"render"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -1117,8 +1383,14 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/correos/:id/preview-code",
-							"host": ["{{baseUrl}}"],
-							"path": ["correos", ":id", "preview-code"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"correos",
+								":id",
+								"preview-code"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -1140,8 +1412,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/emails/status",
-							"host": ["{{baseUrl}}"],
-							"path": ["emails", "status"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emails",
+								"status"
+							]
 						}
 					}
 				},
@@ -1152,8 +1429,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/emails/stats",
-							"host": ["{{baseUrl}}"],
-							"path": ["emails", "stats"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emails",
+								"stats"
+							]
 						}
 					}
 				},
@@ -1173,8 +1455,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/emails/test",
-							"host": ["{{baseUrl}}"],
-							"path": ["emails", "test"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emails",
+								"test"
+							]
 						}
 					}
 				},
@@ -1194,8 +1481,15 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/emails/emision/:id/send",
-							"host": ["{{baseUrl}}"],
-							"path": ["emails", "emision", ":id", "send"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emails",
+								"emision",
+								":id",
+								"send"
+							],
 							"variable": [
 								{
 									"key": "id",
@@ -1221,8 +1515,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/emails/emisions/send",
-							"host": ["{{baseUrl}}"],
-							"path": ["emails", "emisions", "send"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emails",
+								"emisions",
+								"send"
+							]
 						}
 					}
 				},
@@ -1242,8 +1542,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/emails/pending/send",
-							"host": ["{{baseUrl}}"],
-							"path": ["emails", "pending", "send"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emails",
+								"pending",
+								"send"
+							]
 						}
 					}
 				}
@@ -1269,8 +1575,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/files/upload",
-							"host": ["{{baseUrl}}"],
-							"path": ["files", "upload"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"files",
+								"upload"
+							]
 						}
 					}
 				}
