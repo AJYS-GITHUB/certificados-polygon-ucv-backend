@@ -7,6 +7,7 @@ router.get('/:id', certificadoController.getById);
 router.post('/', certificadoController.create);
 router.put('/:id', certificadoController.update);
 router.delete('/:id', certificadoController.delete);
+router.post('/preview', certificadoController.previewCertificate);
 router.post('/generate-pdf', certificadoController.generatePdf);
 
 module.exports = router;

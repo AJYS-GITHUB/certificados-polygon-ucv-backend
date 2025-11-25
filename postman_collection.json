@@ -182,6 +182,32 @@
 					}
 				},
 				{
+					"name": "Preview Certificado",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"certificado_id\": \"certificado_id_aqui\",\n  \"doc\": \"12345678\",\n  \"fullname\": \"Juan Pérez\",\n  \"datestring\": \"2024-01-15\",\n  \"campo_personalizado\": \"valor\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/certificados/preview",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"certificados",
+								"preview"
+							]
+						}
+					}
+				},
+				{
 					"name": "Subir PDF del Certificado",
 					"request": {
 						"method": "POST",

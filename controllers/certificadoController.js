@@ -128,3 +128,84 @@ exports.generatePdf = async (req, res) => {
 };
 
 
+// Vista previa de certificado (sin guardar en BD ni blockchain)
+exports.previewCertificate = async (req, res) => {
+   const { certificado_id, doc, fullname, datestring, ...dynamicFields } = req.body;
+
+   try {
+      // Validaciones
+      if (!certificado_id || !doc || !fullname) {
+         return res.status(400).json({
+            error: 'Campos requeridos: certificado_id, doc, fullname'
+         });
+      }
+
+      const certificado = await Certificado.findById(certificado_id).populate('dependencia');
+      if (!certificado) {
+         return res.status(404).json({ error: 'Certificado no encontrado' });
+      }
+
+      const templatePath = path.join(__dirname, '..', 'storage', 'templates', certificado.filename);
+
+      // Generar UUID temporal para el preview
+      const tempUuid = `preview-${uuidv4()}`;
+      const tempPath = path.join(__dirname, '..', 'storage', 'test', `${tempUuid}.pdf`);
+
+      // Asegurar que el directorio existe
+      const testDir = path.join(__dirname, '..', 'storage', 'test');
+      if (!fs.existsSync(testDir)) {
+         fs.mkdirSync(testDir, { recursive: true });
+      }
+
+      // Preparar datos dinámicos para el PDF (igual que en emisión)
+      const data = {
+         subject: fullname,
+         dateString: datestring,
+         date: datestring,
+         fullname: fullname,
+         doc: doc,
+         documento: doc,
+         ...dynamicFields
+      };
+
+      console.log('Generando preview con datos:', data);
+
+      // Generar QR temporal (apunta a una URL de preview)
+      const qrdata = `${process.env.APP_URI}/preview/${tempUuid}`;
+
+      // Generar PDF
+      const resultPath = await generateCertificadoPdf({
+         templatePath,
+         paginas: certificado.paginas,
+         data,
+         qrdata,
+         savePath: tempPath
+      });
+
+      // Enviar el PDF como respuesta
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="preview-${certificado.titulo}.pdf"`);
+
+      const fileStream = fs.createReadStream(resultPath);
+      fileStream.pipe(res);
+
+      // Limpiar archivo temporal después de enviarlo
+      fileStream.on('end', () => {
+         setTimeout(() => {
+            if (fs.existsSync(resultPath)) {
+               fs.unlinkSync(resultPath);
+               console.log(`Preview temporal eliminado: ${resultPath}`);
+            }
+         }, 1000);
+      });
+
+   } catch (error) {
+      console.error('Error generating preview:', error);
+      res.status(500).json({
+         error: 'Error generando vista previa',
+         details: error.message
+      });
+   }
+};
+
+
