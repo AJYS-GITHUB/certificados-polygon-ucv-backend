@@ -258,11 +258,23 @@ exports.create_ethers = async (req, res) => {
 
         // Generar imagen JPEG de la primera página usando pdftoppm
         const imgDir = path.join(__dirname, '..', 'storage', 'img');
-        if (!fs.existsSync(imgDir)) fs.mkdirSync(imgDir);
+        if (!fs.existsSync(imgDir)) fs.mkdirSync(imgDir, { recursive: true });
         const imgBase = path.join(imgDir, uuid);
         const { execSync } = require('child_process');
-        execSync(`pdftoppm -jpeg -f 1 -l 1 "${resultSavePath}" "${imgBase}"`);
-        const imagePath = `${imgBase}-1.jpg`;
+        try {
+            execSync(`pdftoppm -jpeg -f 1 -l 1 "${resultSavePath}" "${imgBase}"`);
+            const imagePath = `${imgBase}-1.jpg`;
+            // Verificar que la imagen se generó correctamente
+            if (!fs.existsSync(imagePath)) {
+                console.warn(`⚠️ Advertencia: La imagen no se generó correctamente en ${imagePath}`);
+            } else {
+                console.log(`✅ Imagen generada exitosamente: ${imagePath}`);
+            }
+        } catch (err) {
+            console.error(`❌ Error generando imagen JPEG: ${err.message}`);
+            console.error(`Comando ejecutado: pdftoppm -jpeg -f 1 -l 1 "${resultSavePath}" "${imgBase}"`);
+            throw new Error(`No se pudo generar la imagen JPEG: ${err.message}`);
+        }
 
         const resultSignedPath = await signPdf(resultSavePath, certPath, resultSavePath.replace('.pdf', '-signed.pdf'), certificado.dependencia.clave);
 
@@ -312,6 +324,7 @@ exports.create_ethers = async (req, res) => {
         );
 
         console.log(`📤 Emisión ${nueva._id} agregada a la cola de blockchain con job ID: ${jobId}`);
+        console.log(`📸 Imagen disponible en: ${nueva.imagePath}`);
 
         // Responder inmediatamente sin esperar la transacción
         res.status(201).json({
@@ -340,7 +353,6 @@ exports.balance = async (req, res) => {
     }
 };
 
-// Actualizar emisión
 exports.update = async (req, res) => {
     try {
         const actualizada = await Emision.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -351,7 +363,6 @@ exports.update = async (req, res) => {
     }
 };
 
-// Eliminar emisión
 exports.delete = async (req, res) => {
     try {
         const eliminada = await Emision.findByIdAndDelete(req.params.id);

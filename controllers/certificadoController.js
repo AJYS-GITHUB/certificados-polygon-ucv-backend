@@ -63,6 +63,11 @@ exports.create = async (req, res) => {
 // Actualizar certificado
 exports.update = async (req, res) => {
    try {
+      // Sanitizar plantillaCorreo: convertir string vacío a null
+      if (req.body.plantillaCorreo === '') {
+         req.body.plantillaCorreo = null;
+      }
+
       const actualizado = await Certificado.findByIdAndUpdate(req.params.id, req.body, { new: true });
       if (!actualizado) return res.status(404).json({ error: 'No encontrado' });
       res.json(actualizado);
