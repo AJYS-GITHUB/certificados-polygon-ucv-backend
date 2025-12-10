@@ -5,6 +5,7 @@ const router = express.Router();
 const emisionController = require('../controllers/emisionController');
 
 router.get('/', emisionController.getAll);
+router.get('/summary', emisionController.getSummary);
 router.get('/balance', emisionController.balance);
 router.get('/queue/stats', emisionController.getBlockchainQueueStats);
 router.get('/processing', emisionController.getProcessingEmissions);

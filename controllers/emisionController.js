@@ -39,16 +39,128 @@ function hexToRgb(hex) {
     return rgb(r, g, b);
 }
 
+/**
+ * Obtener resumen/estadísticas de emisiones
+ */
+exports.getSummary = async (req, res) => {
+    try {
+        // Obtener conteos por estado usando agregación
+        const statusStats = await Emision.aggregate([
+            {
+                $group: {
+                    _id: '$status',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // Convertir array a objeto
+        const byStatus = statusStats.reduce((acc, stat) => {
+            acc[stat._id || 'sin_estado'] = stat.count;
+            return acc;
+        }, {});
+
+        // Obtener conteos de envío por correo
+        const emailStats = await Emision.aggregate([
+            {
+                $group: {
+                    _id: '$emailSended',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // Convertir a objeto de email
+        const emailSent = emailStats.find(s => s._id === true)?.count || 0;
+        const emailPending = emailStats.find(s => s._id === false || s._id === null || s._id === undefined)?.count || 0;
+
+        // Total de emisiones
+        const total = await Emision.countDocuments();
+
+        res.json({
+            success: true,
+            total,
+            byStatus: {
+                pendiente: byStatus.pendiente || 0,
+                procesando: byStatus.procesando || 0,
+                completado: byStatus.completado || 0,
+                error: byStatus.error || 0,
+                reintentando: byStatus.reintentando || 0,
+                sin_estado: byStatus.sin_estado || 0
+            },
+            byEmail: {
+                enviados: emailSent,
+                pendientes: emailPending
+            },
+            timestamp: new Date().toISOString()
+        });
+    } catch (err) {
+        console.error('Error en getSummary:', err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
 exports.getAll = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
+        
+        // Construir filtros opcionales
+        const filters = {};
+        
+        // Filtro por estado de emisión (pendiente, procesando, completado, error, reintentando)
+        if (req.query.status) {
+            filters.status = req.query.status;
+        }
+        
+        // Filtro por si fue enviado por correo
+        if (req.query.emailSended !== undefined) {
+            filters.emailSended = req.query.emailSended === 'true' || req.query.emailSended === true;
+        }
+        
+        // Filtro por certificado (ID del certificado)
+        if (req.query.certificado) {
+            filters.certificado = req.query.certificado;
+        }
+        
+        // Filtro por búsqueda en subject (documento, nombre o correo)
+        if (req.query.search) {
+            const searchRegex = new RegExp(req.query.search, 'i'); // Case insensitive
+            filters.$or = [
+                { 'subject.documento': searchRegex },
+                { 'subject.nombreCompleto': searchRegex },
+                { 'subject.correo': searchRegex }
+            ];
+        }
+        
+        // Filtro específico por documento
+        if (req.query.documento) {
+            filters['subject.documento'] = new RegExp(req.query.documento, 'i');
+        }
+        
+        // Filtro específico por nombre completo
+        if (req.query.nombreCompleto) {
+            filters['subject.nombreCompleto'] = new RegExp(req.query.nombreCompleto, 'i');
+        }
+        
+        // Filtro específico por correo
+        if (req.query.correo) {
+            filters['subject.correo'] = new RegExp(req.query.correo, 'i');
+        }
+        
         const [items, total] = await Promise.all([
-            Emision.find().skip(skip).limit(limit).populate('certificado').sort({ fechaEmision: -1 }),
-            Emision.countDocuments()
+            Emision.find(filters).skip(skip).limit(limit).populate('certificado').sort({ fechaEmision: -1 }),
+            Emision.countDocuments(filters)
         ]);
-        res.json({ items, total, page, pages: Math.ceil(total / limit) });
+        
+        res.json({ 
+            items, 
+            total, 
+            page, 
+            pages: Math.ceil(total / limit),
+            filters: filters // Devolver filtros aplicados para referencia
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

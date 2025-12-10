@@ -267,9 +267,69 @@
 								{
 									"key": "limit",
 									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "completado",
+									"description": "Filtrar por estado: pendiente, procesando, completado, error, reintentando",
+									"disabled": true
+								},
+								{
+									"key": "emailSended",
+									"value": "true",
+									"description": "Filtrar por si fue enviado por correo: true o false",
+									"disabled": true
+								},
+								{
+									"key": "certificado",
+									"value": "",
+									"description": "Filtrar por ID del certificado",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "",
+									"description": "Búsqueda general en documento, nombre o correo",
+									"disabled": true
+								},
+								{
+									"key": "documento",
+									"value": "",
+									"description": "Filtrar por documento del subject",
+									"disabled": true
+								},
+								{
+									"key": "nombreCompleto",
+									"value": "",
+									"description": "Filtrar por nombre completo del subject",
+									"disabled": true
+								},
+								{
+									"key": "correo",
+									"value": "",
+									"description": "Filtrar por correo del subject",
+									"disabled": true
 								}
 							]
 						}
+					}
+				},
+				{
+					"name": "Resumen de Emisiones",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/summary",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								"summary"
+							]
+						},
+						"description": "Obtiene estadísticas y resumen de emisiones: total, por estado (pendiente, procesando, completado, error, reintentando) y por envío de correo (enviados, pendientes)"
 					}
 				},
 				{
