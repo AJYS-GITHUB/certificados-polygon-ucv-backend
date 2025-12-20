@@ -454,9 +454,18 @@ exports.create_ethers = async (req, res) => {
 
 exports.balance = async (req, res) => {
     try {
+        const RPC_URL = process.env.RPC_URL || "https://polygon-rpc.com";
+        const PRIVATE_KEY = process.env.PRIVATE_KEY;
+
+        if (!PRIVATE_KEY) {
+            return res.status(400).json({ error: 'PRIVATE_KEY no está configurada' });
+        }
+
+        const provider = new ethers.JsonRpcProvider(RPC_URL);
+        const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 
         const balance = await provider.getBalance(wallet.address);
-        res.status(201).json({
+        res.status(200).json({
             address: wallet.address,
             balance: ethers.formatEther(balance) + " POL"
         });
@@ -805,5 +814,457 @@ exports.getProcessingEmissions = async (req, res) => {
     } catch (error) {
         console.error('Error en getProcessingEmissions:', error);
         res.status(500).json({ error: error.message });
+    }
+};
+
+/**
+ * Obtener emisiones pendientes de blockchain (sin transactionId)
+ */
+exports.getPendingBlockchain = async (req, res) => {
+    try {
+        // Buscar emisiones que no tienen transactionId o está vacío
+        const pendingEmissions = await Emision.find({
+            $or: [
+                { transactionId: null },
+                { transactionId: '' },
+                { transactionId: '-' },
+                { transactionId: { $exists: false } }
+            ],
+            status: { $nin: ['completado'] } // Excluir las que ya están completadas
+        })
+        .populate('certificado')
+        .sort({ fechaEmision: -1 });
+
+        res.json({
+            success: true,
+            count: pendingEmissions.length,
+            emissions: pendingEmissions.map(e => ({
+                id: e._id,
+                uuid: e.uuid,
+                subject: e.subject,
+                status: e.status,
+                certificado: e.certificado?.titulo || 'N/A',
+                fechaEmision: e.fechaEmision,
+                jsonPath: e.jsonPath
+            }))
+        });
+
+    } catch (error) {
+        console.error('Error en getPendingBlockchain:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+/**
+ * Reenviar UNA emisión específica al blockchain
+ */
+exports.resendToBlockchain = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { emite } = req.body;
+
+        const emision = await Emision.findById(id).populate('certificado');
+        
+        if (!emision) {
+            return res.status(404).json({ 
+                success: false,
+                error: 'Emisión no encontrada' 
+            });
+        }
+
+        // Verificar que tiene los datos necesarios
+        if (!emision.jsonPath || emision.jsonPath === '-') {
+            return res.status(400).json({ 
+                success: false,
+                error: 'La emisión no tiene jsonPath válido' 
+            });
+        }
+
+        if (!emision.certificado) {
+            return res.status(400).json({ 
+                success: false,
+                error: 'La emisión no tiene certificado asociado' 
+            });
+        }
+
+        // Agregar a la cola de blockchain
+        const blockchainQueue = getBlockchainQueue();
+        const jobId = await blockchainQueue.addToQueue(
+            emision._id,
+            emite || 'resend',
+            emision.certificado.titulo,
+            emision.jsonPath
+        );
+
+        // Actualizar estado
+        emision.status = 'procesando';
+        await emision.save();
+
+        console.log(`📤 Emisión ${emision._id} reenviada al blockchain con job ID: ${jobId}`);
+
+        res.json({
+            success: true,
+            message: 'Emisión reenviada al blockchain',
+            emisionId: emision._id,
+            blockchainJobId: jobId
+        });
+
+    } catch (error) {
+        console.error('Error en resendToBlockchain:', error);
+        res.status(500).json({ 
+            success: false,
+            error: error.message 
+        });
+    }
+};
+
+/**
+ * Reenviar TODAS las emisiones pendientes al blockchain
+ */
+exports.resendAllPendingToBlockchain = async (req, res) => {
+    try {
+        const { emite } = req.body;
+        const { limit } = req.query; // Opcional: limitar cuántas procesar
+
+        // Buscar emisiones que no tienen transactionId o está vacío
+        let query = Emision.find({
+            $or: [
+                { transactionId: null },
+                { transactionId: '' },
+                { transactionId: '-' },
+                { transactionId: { $exists: false } }
+            ],
+            status: { $nin: ['completado'] }
+        }).populate('certificado');
+
+        // Aplicar límite si se especifica
+        if (limit) {
+            query = query.limit(parseInt(limit));
+        }
+
+        const pendingEmissions = await query.sort({ fechaEmision: -1 });
+
+        if (pendingEmissions.length === 0) {
+            return res.json({
+                success: true,
+                message: 'No hay emisiones pendientes de blockchain',
+                processed: 0,
+                failed: 0
+            });
+        }
+
+        const blockchainQueue = getBlockchainQueue();
+        const results = {
+            processed: [],
+            failed: []
+        };
+
+        for (const emision of pendingEmissions) {
+            try {
+                // Verificar datos necesarios
+                if (!emision.jsonPath || emision.jsonPath === '-') {
+                    results.failed.push({
+                        id: emision._id,
+                        error: 'Sin jsonPath válido'
+                    });
+                    continue;
+                }
+
+                if (!emision.certificado) {
+                    results.failed.push({
+                        id: emision._id,
+                        error: 'Sin certificado asociado'
+                    });
+                    continue;
+                }
+
+                // Agregar a la cola de blockchain
+                const jobId = await blockchainQueue.addToQueue(
+                    emision._id,
+                    emite || 'resend-batch',
+                    emision.certificado.titulo,
+                    emision.jsonPath
+                );
+
+                // Actualizar estado
+                emision.status = 'procesando';
+                await emision.save();
+
+                results.processed.push({
+                    id: emision._id,
+                    subject: emision.subject?.nombreCompleto,
+                    jobId: jobId
+                });
+
+                console.log(`📤 Emisión ${emision._id} agregada a cola de blockchain (job: ${jobId})`);
+
+            } catch (error) {
+                results.failed.push({
+                    id: emision._id,
+                    error: error.message
+                });
+            }
+        }
+
+        console.log(`✅ Procesamiento masivo completado: ${results.processed.length} enviadas, ${results.failed.length} fallidas`);
+
+        res.json({
+            success: true,
+            message: `${results.processed.length} emisiones enviadas a la cola de blockchain`,
+            processed: results.processed.length,
+            failed: results.failed.length,
+            details: {
+                processed: results.processed,
+                failed: results.failed
+            }
+        });
+
+    } catch (error) {
+        console.error('Error en resendAllPendingToBlockchain:', error);
+        res.status(500).json({ 
+            success: false,
+            error: error.message 
+        });
+    }
+};
+
+/**
+ * Obtener emisiones con transactionId pero no confirmadas
+ */
+exports.getUnconfirmedTransactions = async (req, res) => {
+    try {
+        // Buscar emisiones que tienen transactionId pero no están completadas
+        const unconfirmedEmissions = await Emision.find({
+            transactionId: { $exists: true, $nin: [null, '', '-'] },
+            status: { $nin: ['completado', 'error'] }
+        })
+        .populate('certificado')
+        .sort({ updatedAt: -1 });
+
+        res.json({
+            success: true,
+            count: unconfirmedEmissions.length,
+            emissions: unconfirmedEmissions.map(e => ({
+                id: e._id,
+                uuid: e.uuid,
+                subject: e.subject,
+                status: e.status,
+                transactionId: e.transactionId,
+                certificado: e.certificado?.titulo || 'N/A',
+                fechaEmision: e.fechaEmision,
+                updatedAt: e.updatedAt
+            }))
+        });
+
+    } catch (error) {
+        console.error('Error en getUnconfirmedTransactions:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+/**
+ * Verificar y confirmar UNA transacción específica
+ */
+exports.verifyAndConfirmTransaction = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const emision = await Emision.findById(id);
+        
+        if (!emision) {
+            return res.status(404).json({ 
+                success: false,
+                error: 'Emisión no encontrada' 
+            });
+        }
+
+        if (!emision.transactionId || emision.transactionId === '-' || emision.transactionId === '') {
+            return res.status(400).json({ 
+                success: false,
+                error: 'La emisión no tiene transactionId' 
+            });
+        }
+
+        if (emision.status === 'completado') {
+            return res.json({
+                success: true,
+                message: 'La emisión ya está confirmada',
+                emisionId: emision._id,
+                transactionId: emision.transactionId,
+                status: emision.status
+            });
+        }
+
+        // Verificar en blockchain
+        const RPC_URL = process.env.RPC_URL || "https://polygon-rpc.com";
+        const provider = new ethers.JsonRpcProvider(RPC_URL);
+
+        console.log(`🔍 Verificando transacción ${emision.transactionId} para emisión ${emision._id}`);
+
+        const receipt = await provider.getTransactionReceipt(emision.transactionId);
+
+        if (receipt) {
+            if (receipt.status === 1) {
+                // Transacción confirmada exitosamente
+                emision.status = 'completado';
+                await emision.save();
+
+                console.log(`✅ Emisión ${emision._id} confirmada. Block: ${receipt.blockNumber}`);
+
+                return res.json({
+                    success: true,
+                    message: 'Transacción confirmada exitosamente',
+                    emisionId: emision._id,
+                    transactionId: emision.transactionId,
+                    status: 'completado',
+                    blockNumber: receipt.blockNumber,
+                    gasUsed: receipt.gasUsed?.toString()
+                });
+            } else {
+                // Transacción falló en blockchain
+                emision.status = 'error';
+                await emision.save();
+
+                return res.json({
+                    success: false,
+                    message: 'La transacción falló en el blockchain',
+                    emisionId: emision._id,
+                    transactionId: emision.transactionId,
+                    status: 'error',
+                    blockNumber: receipt.blockNumber
+                });
+            }
+        } else {
+            // Transacción aún pendiente
+            return res.json({
+                success: false,
+                message: 'La transacción aún no ha sido confirmada (pendiente en blockchain)',
+                emisionId: emision._id,
+                transactionId: emision.transactionId,
+                status: emision.status
+            });
+        }
+
+    } catch (error) {
+        console.error('Error en verifyAndConfirmTransaction:', error);
+        res.status(500).json({ 
+            success: false,
+            error: error.message 
+        });
+    }
+};
+
+/**
+ * Verificar y confirmar TODAS las transacciones pendientes
+ */
+exports.verifyAndConfirmAllTransactions = async (req, res) => {
+    try {
+        const { limit } = req.query;
+
+        // Buscar emisiones con transactionId pero no completadas
+        let query = Emision.find({
+            transactionId: { $exists: true, $nin: [null, '', '-'] },
+            status: { $nin: ['completado', 'error'] }
+        });
+
+        if (limit) {
+            query = query.limit(parseInt(limit));
+        }
+
+        const unconfirmedEmissions = await query.sort({ updatedAt: -1 });
+
+        if (unconfirmedEmissions.length === 0) {
+            return res.json({
+                success: true,
+                message: 'No hay transacciones pendientes de verificar',
+                confirmed: 0,
+                failed: 0,
+                pending: 0
+            });
+        }
+
+        const RPC_URL = process.env.RPC_URL || "https://polygon-rpc.com";
+        const provider = new ethers.JsonRpcProvider(RPC_URL);
+
+        const results = {
+            confirmed: [],
+            failed: [],
+            pending: []
+        };
+
+        console.log(`🔍 Verificando ${unconfirmedEmissions.length} transacciones pendientes...`);
+
+        for (const emision of unconfirmedEmissions) {
+            try {
+                const receipt = await provider.getTransactionReceipt(emision.transactionId);
+
+                if (receipt) {
+                    if (receipt.status === 1) {
+                        // Confirmada
+                        emision.status = 'completado';
+                        await emision.save();
+
+                        results.confirmed.push({
+                            id: emision._id,
+                            transactionId: emision.transactionId,
+                            subject: emision.subject?.nombreCompleto,
+                            blockNumber: receipt.blockNumber
+                        });
+
+                        console.log(`✅ Emisión ${emision._id} confirmada`);
+                    } else {
+                        // Falló
+                        emision.status = 'error';
+                        await emision.save();
+
+                        results.failed.push({
+                            id: emision._id,
+                            transactionId: emision.transactionId,
+                            subject: emision.subject?.nombreCompleto,
+                            reason: 'Transaction reverted'
+                        });
+
+                        console.log(`❌ Emisión ${emision._id} falló en blockchain`);
+                    }
+                } else {
+                    // Aún pendiente
+                    results.pending.push({
+                        id: emision._id,
+                        transactionId: emision.transactionId,
+                        subject: emision.subject?.nombreCompleto
+                    });
+
+                    console.log(`⏳ Emisión ${emision._id} aún pendiente`);
+                }
+
+                // Pausa para no saturar el RPC
+                await new Promise(resolve => setTimeout(resolve, 200));
+
+            } catch (error) {
+                results.failed.push({
+                    id: emision._id,
+                    transactionId: emision.transactionId,
+                    error: error.message
+                });
+            }
+        }
+
+        console.log(`✅ Verificación completada: ${results.confirmed.length} confirmadas, ${results.failed.length} fallidas, ${results.pending.length} pendientes`);
+
+        res.json({
+            success: true,
+            message: `Verificación completada`,
+            confirmed: results.confirmed.length,
+            failed: results.failed.length,
+            pending: results.pending.length,
+            details: results
+        });
+
+    } catch (error) {
+        console.error('Error en verifyAndConfirmAllTransactions:', error);
+        res.status(500).json({ 
+            success: false,
+            error: error.message 
+        });
     }
 };

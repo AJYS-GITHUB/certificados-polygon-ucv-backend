@@ -356,6 +356,32 @@
 					}
 				},
 				{
+					"name": "Crear Emisión (Sin Blockchain)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"doc\": \"12345678\",\n  \"fullname\": \"Juan Pérez\",\n  \"certificado_id\": \"certificado_id\",\n  \"description\": \"Certificado de Excelencia\",\n  \"datestring\": \"2024-01-01\",\n  \"correo\": \"juan@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/emisiones",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones"
+							]
+						},
+						"description": "Crea una emisión sin enviarla al blockchain. Útil para pruebas o emisiones manuales."
+					}
+				},
+				{
 					"name": "Crear Emisión (Ethers)",
 					"request": {
 						"method": "POST",
@@ -378,7 +404,8 @@
 								"emisiones",
 								"ethers"
 							]
-						}
+						},
+						"description": "Crea una emisión y la envía automáticamente al blockchain de Polygon"
 					}
 				},
 				{
@@ -486,6 +513,162 @@
 								"processing"
 							]
 						}
+					}
+				},
+				{
+					"name": "Emisiones Pendientes de Blockchain",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/pending-blockchain",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								"pending-blockchain"
+							]
+						},
+						"description": "Obtiene todas las emisiones que no tienen transactionId (pendientes de enviar al blockchain)"
+					}
+				},
+				{
+					"name": "Reenviar UNA Emisión al Blockchain",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emite\": \"resend\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/:id/resend-blockchain",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								":id",
+								"resend-blockchain"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID de la emisión a reenviar"
+								}
+							]
+						},
+						"description": "Reenvía una emisión específica al blockchain"
+					}
+				},
+				{
+					"name": "Reenviar TODAS las Emisiones Pendientes al Blockchain",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emite\": \"resend-batch\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/resend-all-blockchain?limit=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								"resend-all-blockchain"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "",
+									"description": "Opcional: Limitar cuántas emisiones procesar"
+								}
+							]
+						},
+						"description": "Reenvía TODAS las emisiones sin transactionId al blockchain. Usar con precaución."
+					}
+				},
+				{
+					"name": "Transacciones No Confirmadas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/unconfirmed-transactions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								"unconfirmed-transactions"
+							]
+						},
+						"description": "Obtiene emisiones que tienen transactionId pero no están confirmadas (status != completado)"
+					}
+				},
+				{
+					"name": "Verificar y Confirmar UNA Transacción",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/:id/verify-transaction",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								":id",
+								"verify-transaction"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "ID de la emisión a verificar"
+								}
+							]
+						},
+						"description": "Verifica si la transacción de una emisión específica ha sido confirmada en el blockchain y actualiza su estado"
+					}
+				},
+				{
+					"name": "Verificar y Confirmar TODAS las Transacciones",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/emisiones/verify-all-transactions?limit=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"emisiones",
+								"verify-all-transactions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "",
+									"description": "Opcional: Limitar cuántas transacciones verificar"
+								}
+							]
+						},
+						"description": "Verifica TODAS las transacciones pendientes de confirmación en el blockchain y actualiza sus estados"
 					}
 				},
 				{
